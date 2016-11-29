@@ -140,7 +140,7 @@
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(surveillance)
 salmonella &lt;-<span class="st"> </span><span class="kw">belgium_sts</span>(<span class="dt">disease =</span> <span class="st">"SALM"</span>, <span class="dt">data =</span> belgium)
 <span class="kw">plot</span>(salmonella)</code></pre></div>
-<p><img src="EARSC_Belgium_files/figure-html/plot%20salmonella-1.png" width="672"></p>
+<p><img src="EARSC_Belgium_files/figure-html/plot%20salmonella-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>So you see the seasonality of Salmonella reported cases: there are more of them in the summer.</p>
 <p>Wait, are you lost here trying to transform your data into a <code>sts</code> object?</p>
 <iframe src="https://giphy.com/gifs/3o85xqZZ20Sk51USTC/html5" width="480" height="300" frameborder="0" class="html5" allowfullscreen>
@@ -168,7 +168,7 @@ salmonella &lt;-<span class="st"> </span><span class="kw">belgium_sts</span>(<sp
 <p>So, let&rsquo;s pretend we are still in 2011, so we&rsquo;ll use only the data up to 2011.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">salmonella2011 &lt;-<span class="st"> </span>salmonella[salmonella@epoch &lt;<span class="st"> </span>lubridate::<span class="kw">ymd</span>(<span class="st">"2012-01-01"</span>)]
 <span class="kw">plot</span>(salmonella2011)</code></pre></div>
-<p><img src="EARSC_Belgium_files/figure-html/unnamed-chunk-3-1.png" width="672"></p>
+<p><img src="EARSC_Belgium_files/figure-html/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>How do we know whether any of the past weeks had too high a number of cases? We&rsquo;ll start by using a pretty simple method from the CDC (okay, name dropping here), EARS (Early Aberration Detection System) C. This method will allow to use the weeks <code>now - baseline</code> up to <code>now - 1</code>, for which we&rsquo;ll compute the mean and standard deviation of the number of cases. We assume that the number of cases follows a non time-varying normal distribution during those weeks, and use the <code>(1 - alpha)</code>-th quantile of those distribution as a threshold. Let&rsquo;s say that if you wanted to use mean + 2 standard deviation as a threshold, this method actually nearly does that!</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">no_of_weeks &lt;-<span class="st"> </span><span class="kw">length</span>(salmonella2011@observed)
 monitored_salmonella2011 &lt;-<span class="st"> </span><span class="kw">earsC</span>(salmonella2011,
@@ -179,7 +179,7 @@ monitored_salmonella2011 &lt;-<span class="st"> </span><span class="kw">earsC</s
 <p>In the code above, we used a given variant of EARS C, denoted C1, and a value of 0.05 for <code>alpha</code>, and we used the 10 last weeks for calculating the mean and standard deviation of the number of weekly Salmonella cases. You can actually play with parameters and see how this changed the results by using <a href="https://t.co/qizcqqMbEJ">this Shiny app.</a>.</p>
 <p>But we can already look at the results of the version of the algorithm we have just applied:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(monitored_salmonella2011)</code></pre></div>
-<p><img src="EARSC_Belgium_files/figure-html/unnamed-chunk-5-1.png" width="672"></p>
+<p><img src="EARSC_Belgium_files/figure-html/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Yes, that&rsquo;s way too many cases for one those weeks: the number of observed cases is higher than the threshold and we get a small frightening red triangle (the outbreak symbol!)! We might have discovered an outbreak!</p>
 <iframe src="https://giphy.com/gifs/8MmxXvaI795Kw/html5" width="480" height="160" frameborder="0" class="html5" allowfullscreen>
 </iframe>
@@ -190,7 +190,7 @@ monitored_salmonella2011 &lt;-<span class="st"> </span><span class="kw">earsC</s
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">monitored_salmonella2011_df &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(monitored_salmonella2011)
 knitr::<span class="kw">kable</span>(monitored_salmonella2011_df)</code></pre></div>
 <table class="table"><thead><tr class="header"><th align="right">observed</th>
-<th align="left">epoch</th>
+<th align="right">epoch</th>
 <th align="left">state</th>
 <th align="left">alarm</th>
 <th align="right">upperbound</th>
@@ -198,50 +198,50 @@ knitr::<span class="kw">kable</span>(monitored_salmonella2011_df)</code></pre></
 <th align="right">freq</th>
 <th align="right">epochInPeriod</th>
 </tr></thead><tbody><tr class="odd"><td align="right">49</td>
-<td align="left">2011-11-21</td>
+<td align="right">15299</td>
 <td align="left">FALSE</td>
 <td align="left">FALSE</td>
-<td align="right">81.00509</td>
+<td align="right">71.58229</td>
 <td align="right">1</td>
 <td align="right">52</td>
 <td align="right">0.9038462</td>
 </tr><tr class="even"><td align="right">125</td>
-<td align="left">2011-11-28</td>
+<td align="right">15306</td>
 <td align="left">FALSE</td>
 <td align="left">TRUE</td>
-<td align="right">75.35676</td>
+<td align="right">71.58229</td>
 <td align="right">1</td>
 <td align="right">52</td>
 <td align="right">0.9230769</td>
 </tr><tr class="odd"><td align="right">44</td>
-<td align="left">2011-12-05</td>
+<td align="right">15313</td>
 <td align="left">FALSE</td>
 <td align="left">FALSE</td>
-<td align="right">102.41307</td>
+<td align="right">110.69301</td>
 <td align="right">1</td>
 <td align="right">52</td>
 <td align="right">0.9423077</td>
 </tr><tr class="even"><td align="right">38</td>
-<td align="left">2011-12-12</td>
+<td align="right">15320</td>
 <td align="left">FALSE</td>
 <td align="left">FALSE</td>
-<td align="right">100.85656</td>
+<td align="right">110.75746</td>
 <td align="right">1</td>
 <td align="right">52</td>
 <td align="right">0.9615385</td>
 </tr><tr class="odd"><td align="right">38</td>
-<td align="left">2011-12-19</td>
+<td align="right">15327</td>
 <td align="left">FALSE</td>
 <td align="left">FALSE</td>
-<td align="right">101.20805</td>
+<td align="right">109.59795</td>
 <td align="right">1</td>
 <td align="right">52</td>
 <td align="right">0.9807692</td>
 </tr><tr class="even"><td align="right">46</td>
-<td align="left">2011-12-26</td>
+<td align="right">15334</td>
 <td align="left">FALSE</td>
 <td align="left">FALSE</td>
-<td align="right">100.00580</td>
+<td align="right">109.72245</td>
 <td align="right">1</td>
 <td align="right">52</td>
 <td align="right">1.0000000</td>

@@ -4,3 +4,4 @@
 .Ruserdata
 inst/doc
 ECDC2sts_cache
+.httr-oauth

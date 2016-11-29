@@ -8,6 +8,7 @@ articles:
     - EARSC_Belgium
     - ECDC2sts
     - sts-conversions
+    - twitter
 
 navbar:
   title: Surveillance Tutorials
