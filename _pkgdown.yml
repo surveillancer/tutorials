@@ -1,0 +1,22 @@
+templates:
+  params:
+    bootswatch: cerulean
+
+articles:
+  - title: "Tutorials"
+    contents:
+    - EARSC_Belgium
+    - ECDC2sts
+    - sts-conversions
+
+navbar:
+  title: Surveillance Tutorials
+  type: default
+  left:
+  - text: Home
+    href: index.html
+  - text: Tutorials
+    href: articles/index.html
+  right:
+  - icon: fa-github fa-lg
+    href: https://github.com/surveillancer/tutorials

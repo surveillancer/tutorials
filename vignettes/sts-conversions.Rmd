@@ -1,0 +1,83 @@
+---
+title: "Convert `sts` objects to various other classes"
+author: "The Hackathon Team"
+date: "29 November 2016"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.align = "center", message = FALSE)
+options(width=100)
+```
+
+The **surveillance** package holds plenty of data sets from the public health
+surveillance of infectious disease occurrence. These count time series
+are objects of the class `"sts"` (surveillance time series), as illustrated in,
+e.g., the [ECDC tutorial](ECDC2sts.html).
+
+This vignette illustrates how to transform an `"sts"` object (back) to a
+`"data.frame"` or an `"xts"` object. We use
+
+```{r stsdata}
+library(surveillance)
+data("ha.sts")
+```
+
+
+## Data frame
+
+Transforming an `"sts"` object to a data frame `cbind`s the various
+contained matrices (observed, state, alarm, upperbound, population):
+
+```{r as.data.frame}
+hadata <- as.data.frame(ha.sts, as.Date = TRUE)
+head(hadata, 2)
+```
+
+This enables post-processing of `sts` objects using other tools.
+For instance, to generate a plot of the data using
+[**ggplot2**](https://CRAN.R-project.org/package=ggplot2).
+
+First we convert the data into a long format using `tidyr` and `dplyr`.
+```{r ggplot2_data, message=FALSE}
+library(dplyr)
+plot_data <- hadata %>% 
+  tidyr::gather(counties, count, starts_with("observed")) %>% 
+  tidyr::separate(counties, c("key", "county"), fill = "left") %>% 
+  select(epoch, county, count)
+head(plot_data)
+```
+
+Then it is straight forward to plot data in `ggplot2`.
+```{r ggplot2}
+library(ggplot2)
+ggplot(plot_data, aes(x = epoch, y = count)) +
+  geom_bar(stat = "identity", color = "#123456") +
+  facet_wrap(~ county) +
+  xlab("ISO week") +
+  ylab("# cases") 
+```
+
+
+## xts
+
+The `as.xts` function can be used to transform `sts` data to the standard
+`"xts"` class for time series (there is also an `as.ts`-method):
+
+```{r as.xts}
+library("xts")
+haxts <- as.xts(ha.sts)
+plot(haxts)
+```
+
+Up to old **xts** 0.9-7, this will only plot the first time series
+Newer versions of **xts** are available from the
+[**xts** GitHub repository](https://github.com/joshuaulrich/xts).
+
+This also enables the use of the
+[**dygraphs**](https://CRAN.R-project.org/package=dygraphs)
+package for interactive visualization:
+
+```{r dygraph, out.width="100%"}
+dygraphs::dygraph(haxts)
+```

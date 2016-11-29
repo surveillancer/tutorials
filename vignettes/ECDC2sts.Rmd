@@ -1,0 +1,214 @@
+---
+title: "Import data from ECDC's Surveillance Atlas of Infectious Diseases"
+author: "The Hackathon Team"
+date: "29 November 2016"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(fig.align = "center", message = FALSE)
+options(width=100)
+```
+
+This tutorial illustrates how one could import csv files manually downloaded from
+[ECDC's Surveillance Atlas of Infectious Diseases](http://ecdc.europa.eu/en/data-tools/atlas)
+into `R` using the `"sts"` class from the
+[**surveillance**](https://CRAN.R-project.org/package=surveillance)
+package.
+As an example, we have downloaded the monthly number of reported cases of
+salmonellosis (serotype AGONA) by all countries, stored in the file
+`ECDC_surveillance_data_Salmonellosis.csv`, which we downloaded
+manually from the Atlas.
+
+
+## Import the csv file from ECDC
+
+These data are from *The European Surveillance System - TESSy*, see
+[file LICENSE](../LICENSE).
+
+This is how the first 4 lines of the csv file look like:
+
+```{r csvfile}
+cat(readLines("data/ECDC_surveillance_data_Salmonellosis.csv", n = 4), sep="\n")
+```
+
+The first step is to import the relevant data from the csv file into R.
+
+```{r ecdc}
+read_ecdc <- function (file, id = "RegionCode")
+{
+    ## import csv file
+    ecdc <- read.csv(file, header = TRUE, stringsAsFactors = FALSE,
+                     na.strings = "-")
+
+    ## exclude aggregate counts for EU and EU/EEA
+    ecdc_countries <- subset(ecdc, !RegionName %in% c("EU/EEA", "EU"),
+                             select = -TxtValue)
+
+    ## convert from long format to wide format needed by sts
+    ecdc_wide <- reshape(ecdc_countries[c("Time", id, "NumValue")],
+                         idvar = "Time", timevar = id,
+                         direction = "wide")
+    names(ecdc_wide) <- sub("NumValue.", "", names(ecdc_wide), fixed = TRUE)
+    row.names(ecdc_wide) <- NULL
+    attr(ecdc_wide, "reshapeWide") <- NULL
+    return(ecdc_wide)
+}
+
+ecdc <- read_ecdc("data/ECDC_surveillance_data_Salmonellosis.csv")
+
+head(ecdc)
+tail(ecdc)
+```
+
+
+## Import map data
+
+The `"sts"` class can be used without a supplementary map, but incorporating one
+enables nice visualizations.
+We retrieve a suitable GeoJSON dataset for Europe from the
+[GitHub repository of the open knowledge foundation](https://github.com/datasets/geo-nuts-administrative-boundaries).
+
+```{r map_Europe}
+library("sp")
+read_map_Europe <- function ()
+{
+    ## Read NUTS1 level data for Europe from open knowledge foundation
+    map <- rgdal::readOGR("https://raw.githubusercontent.com/datasets/geo-nuts-administrative-boundaries/master/data/nuts_rg_60m_2010_lvl_1.geojson", "OGRGeoJSON", verbose = FALSE)
+
+    ## omit "FR9" (French Guiana) [no offense] for a more compact map
+    map <- map[map$NUTS_ID != "FR9",]
+
+    ## Make a factor variable containing the country
+    map$COUNTRY <- factor(substr(map$NUTS_ID,1,2))
+    levels(map$COUNTRY)
+
+    ## Union polygons by country
+    rgeos::gUnaryUnion(map, id = map$COUNTRY)
+}
+
+## if you cannot get rgdal to work on your system, just use the stored file
+file_map_Europe <- "data/map_Europe.RData"
+if (file.exists(file_map_Europe)) {
+    load(file_map_Europe)
+} else {
+    map_Europe <- read_map_Europe()
+    save(map_Europe, file = file_map_Europe, compress = "xz")
+}
+```
+
+```{r map_summary}
+summary(map_Europe)
+```
+
+```{r map_plot, out.width = "100%", echo = -1}
+par(mar = c(0,0,0,0))
+plot(map_Europe)
+```
+
+## Load and merge population data
+
+```{r}
+population <- read.csv("data/population-eurostat.csv",
+                       skip = 11, sep = ";", na.string = ":")
+idx <- pmatch(names(ecdc)[-1], population$NUTS)
+stopifnot(sum(is.na(idx)) == 0)
+year <- paste0("X",unlist(lapply(strsplit(ecdc$Time, split="-"), function(x) x[1])))
+popMatrix <- t(population[idx,year])
+colnames(popMatrix) <- as.character(population$NUTS)[idx]
+```
+
+## Create an `"sts"` object
+
+We can now create an `"sts"` object from the matrix of counts and the map
+containing a geographic representation of the columns of the count data.
+
+```{r sts}
+library("surveillance")
+(start <- as.numeric(strsplit(min(ecdc$Time), split="-")[[1]]))
+ecdc_sts <- sts(ecdc[,-1], start = start, frequency = 12, # monthly data
+                population = popMatrix,
+                map = map_Europe) # row.names(map_Europe) are matched against colnames(ecdc)
+```
+
+Now having the data as an object of the `"sts"` class, the
+**surveillance** package offers functionality for visualization,
+monitoring and modelling of the data. Some basic visualizations are
+shown below, the monitoring and modelling features are illustrated in
+other tutorials on this site or [vignettes of the surveillance
+package](https://cran.r-project.org/web/packages/surveillance/vignettes/hhh4_spacetime.pdf).
+
+
+`"sts"` objects can also be converted to the well-known
+[`"xts"`](https://CRAN.R-project.org/package=xts) class,
+to the basic `"ts"` class,
+and to a `data.frame` via the associated `as.data.frame()` method.
+See [this tutorial](sts-conversions.html).
+
+
+## Visualizations
+
+### Time series of cases aggregated over all countries
+
+```{r stsplot_time1}
+plot(ecdc_sts, type = observed ~ time)  # incomplete because of missing counts
+```
+
+### Selecting a single time series
+
+```{r stsplot_time_finland}
+plot(ecdc_sts[,"FI"], type = observed ~ time)
+```
+
+### Multivariate time series
+
+```{r stsplot_time, fig.width=10, fig.height=7, out.width="100%"}
+plot(ecdc_sts, type = observed ~ time | unit)  # see help("stsplot_time") for options
+```
+
+Currently, small manual efforts are required to plot the incidence
+(a `population` argument as for the spatial plots below is in development):
+```{r stsplot_time_incidence, fig.width=10, fig.height=7, out.width="100%"}
+local({
+    observed(ecdc_sts) <- observed(ecdc_sts) / population(ecdc_sts) * 1000000
+    plot(ecdc_sts, type = observed ~ time | unit, ylab = "Incidence (per 1'000'000)")
+})
+```
+
+
+### Map aggregated over time
+
+```{r stsplot_space}
+plot(ecdc_sts, type = observed ~ unit)  # see help("stsplot_space") for options
+```
+
+### Incidence map aggregated over time
+
+```{r stsplot_space_incidence}
+plot(ecdc_sts, type = observed ~ unit,
+     population = (colMeans(population(ecdc_sts))/1000000) * (nrow(ecdc_sts)/12))
+     # -> mean yearly incidence per 1'000'000 inhabitants
+```
+
+
+### Animation from 2011 to 2015
+
+```{r animation, fig.show="animate", out.width="75%", fig.width=6, fig.height=8, cache=TRUE}
+animate(ecdc_sts, tps = 49:96, sleep = 0, verbose = FALSE) # see help("animate.sts") for options
+```
+
+The [**animation**](https://CRAN.R-project.org/package=animation) package can be
+used to store such an animation in other formats, e.g., Flash, GIF, HTML pages,
+PDF and videos. The `help("animate.sts")` contains an example.
+
+
+### Animation with incidence
+
+```{r animation_incidence, fig.show="animate", out.width="75%", fig.width=6, fig.height=8, cache=TRUE}
+## Select 10 groups based on the quantiles of the incidence distribution
+breaks <- quantile(1e6 * observed(ecdc_sts) / population(ecdc_sts),
+                   probs = seq(0,1,length=20), na.rm = TRUE)
+animate(ecdc_sts, tps = 49:96, sleep = 0, verbose = FALSE,
+        population = colMeans(population(ecdc_sts))/1000000,
+        at = round(breaks, 1))
+```

@@ -1,0 +1,168 @@
+---
+title: "Monitor infectious diseases with surveillance"
+author: "The hackathon team (and a cat)"
+date: "November 29, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+```
+
+# Introduction
+
+Imagine you are an epidemiologist in charge of Salmonella surveillance
+for a whole country. One of your tasks is to detect potential outbreak as early as possible, in order to start an investigation and remove, e.g., infected ham from the supermarkets in your country. The later you detect and investigate the outbreak, the more people will have gotten sick. How can you know about an outbreak before there are so many cases that everyone is aware of the outbreak?
+
+<iframe src="https://giphy.com/gifs/ToMjGpNuOksUiclTp4c/html5" width="480" height="270" frameBorder="0" class="html5" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/superman-eOewytQL4tOOA">via GIPHY</a></p>
+
+Maybe (hopefully) you have data on the reported number of new cases of Salmonella each week. In absence of any outbreak, this number might be more or less the same every year for a given week: a little bit more in the summer, a little bit less in the winter. For other diseases it might always be approximately the same all the time no matter the season. So if for the present week you suddenly get more cases than usual... maybe you should make a few phone calls?
+The question is, how 1) to define what *more than usual* is and 2) to have your computer figure out alarms for you, instead of having to visualize and crunch numbers by hand? This is what `surveillance` does for you.
+
+<iframe src="https://giphy.com/gifs/11zYoBAFvX7Xhu/html5" width="500" height="250" frameBorder="0" class="html5" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/superman-eOewytQL4tOOA">via GIPHY</a></p>
+
+This tutorial will show how to use data from the Belgian surveillance system of infectious diseases for detecting an outbreak. The data are from the years 2005 to 2012, but we shall use them as if we were still in 2011, in order to perform prospective surveillance as it happens in real life: is there an anomaly in the number of cases this week? In other words, should you get worried now about a possible outbreak based on the currently available data?
+
+<iframe src="https://giphy.com/gifs/ue5ZwFCaxy64M/html5" width="480" height="280" frameBorder="0" class="html5" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/superman-eOewytQL4tOOA">via GIPHY</a></p>
+
+# First step: getting the data into R
+
+For this, ask your favourite data manager to set up a data connection, or follow steps similar to the following, where we use data from a csv file that we download from [this page](https://epistat.wiv-isp.be/data/public_cases.csv) and that we then save as `.RData`. In this case we download the data behind the excellent Belgium [epistat website](https://epistat.wiv-isp.be/).
+
+```{r, eval = TRUE}
+belgium <- readr::read_csv("https://epistat.wiv-isp.be/data/public_cases.csv")
+```
+
+How does this data look like? Let us have a look at the head of the `data.frame`.
+
+```{r show data}
+knitr::kable(head(belgium))
+
+```
+This dataset has one row per notified case, with
+
+* `Age` age of the patient (in years);
+
+* `DateMonday` date of the Monday of the week of report: we are dealing with weekly data;
+
+* `Gender` gender of the patient;
+
+* `Subject` category of the disease, e.g. `SALM` for Salmonella;
+
+* `NUTS2` administrative subdivision of Belgium where the case was reported.
+
+We will start by looking at time series of cases for the whole country, i.e. aggregated for all age group and genders. For this, let's write a small function. This will load, filter and aggregate the data, and then make a `sts` object out of it. Such an object can be thought of as a wrapper for a time series, which will then be used by `surveillance`.
+
+```{r function}
+belgium_sts <- function(disease, data){
+  
+  # filter the chosen disease
+  disease_data <- dplyr::filter_(data, paste0("Subject == \"",disease,"\""))
+
+  # aggregated cases by week to get the weekly number of cases
+  observed <- dplyr::group_by(disease_data, DateMonday)
+  observed <- dplyr::summarize(observed, n_cases = n())
+
+  # create the sts object
+  disease_sts <- surveillance::sts(observed = observed$n_cases, # weekly number of cases
+                                    start = c(min(lubridate::year(observed$DateMonday)), 01), # first week of the time series
+                                    frequency = 52, # weekly data
+                                    epochAsDate = TRUE, # we do have dates, not only index
+                                    epoch = as.numeric(observed$DateMonday) # here are the dates
+                                    )
+
+  disease_sts
+}
+```
+
+Okay, let's test this function and make a quick plot!
+
+```{r plot salmonella}
+library(surveillance)
+salmonella <- belgium_sts(disease = "SALM", data = belgium)
+plot(salmonella)
+
+```
+
+So you see the seasonality of Salmonella reported cases: there are more of them in the summer.
+
+Wait, are you lost here trying to transform your data into a `sts` object?
+
+<iframe src="https://giphy.com/gifs/3o85xqZZ20Sk51USTC/html5" width="480" height="300" frameBorder="0" class="html5" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/superman-eOewytQL4tOOA">via GIPHY</a></p>
+
+Let's have a look at this code again:
+
+```{r, eval = FALSE}
+disease_sts <- surveillance::sts(observed = observed$n_cases, # weekly number of cases
+                                    start = c(min(lubridate::year(observed$DateMonday)), 01), # first week of the time series
+                                    frequency = 52, # weekly data
+                                    epochAsDate = TRUE, # we do have dates, not only index
+                                    epoch = as.numeric(observed$DateMonday) # here are the dates
+                                    )
+
+```
+
+This code helps going from a `data.frame` to `sts`, so basically a table. Let's say it's a table of chocolate (the weekly number of cases), eggs (the date of the Monday at the beginning of each week), and on the side butter (the frequency of the data, which is weekly) and sugar (the oldest week of the data). Using the code above, we prepare this information for the `surveillance` package. This package is a bit lazy so even if you feed it a vector of dates, you need to tell it what the frequency and minimum is. So from our `data.frame`/pile of ingredients we make a `sts`-object/cake, and then the analysis is... a piece of cake!
+
+Okay, this was a bad pun, so let's monitor this time series and look for outbreaks.
+
+<iframe src="https://giphy.com/gifs/LHZyixOnHwDDy/html5" width="480" height="250" frameBorder="0" class="html5" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/superman-eOewytQL4tOOA">via GIPHY</a></p>
+
+# Second step: looking for outbreaks
+
+So, let's pretend we are still in 2011, so we'll use only the data up to 2011.
+
+```{r}
+salmonella2011 <- salmonella[salmonella@epoch < lubridate::ymd("2012-01-01")]
+plot(salmonella2011)
+```
+
+How do we know whether any of the past weeks had too high a number of cases? We'll start by using a pretty simple method from the CDC (okay, name dropping here), EARS (Early Aberration Detection System) C. This method will allow to use the weeks `now - baseline` up to `now - 1`, for which we'll compute the mean and standard deviation of the number of cases. We assume that the number of cases follows a non time-varying normal distribution during those weeks, and use the `(1 - alpha)`-th quantile of those distribution as a threshold. Let's say that if you wanted to use mean + 2 standard deviation as a threshold, this method actually nearly does that!
+
+
+```{r}
+no_of_weeks <- length(salmonella2011@observed)
+monitored_salmonella2011 <- earsC(salmonella2011,
+                                  control = list(range = c((no_of_weeks - 5): no_of_weeks),
+                                                 method = "C1",
+                                                 alpha = 0.05,
+                                                 baseline = 10))
+
+```
+
+In the code above, we used a given variant of EARS C, denoted C1, and a value of 0.05 for `alpha`, and we used the 10 last weeks for calculating the mean and standard deviation of the number of weekly Salmonella cases. You can actually play with parameters and see how this changed the results by using [this Shiny app.](https://t.co/qizcqqMbEJ).
+
+But we can already look at the results of the version of the algorithm we have just applied:
+
+
+```{r}
+
+plot(monitored_salmonella2011)
+
+```
+
+Yes, that's way too many cases for one those weeks: the number of observed cases is higher than the threshold and we get a small frightening red triangle (the outbreak symbol!)! We might have discovered an outbreak!
+
+<iframe src="https://giphy.com/gifs/8MmxXvaI795Kw/html5" width="480" height="160" frameBorder="0" class="html5" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/superman-eOewytQL4tOOA">via GIPHY</a></p>
+
+Note to the `tidyverse` addicts out there... You can transform `sts` objects into `data.frame` and then use all your usual tools!
+
+```{r}
+monitored_salmonella2011_df <- as.data.frame(monitored_salmonella2011)
+knitr::kable(monitored_salmonella2011_df)
+```
+
+<iframe src="https://giphy.com/gifs/3TpLIfyJLhpV6/html5" width="480" height="330" frameBorder="0" class="html5" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/superman-eOewytQL4tOOA">via GIPHY</a></p>
+
+# Conclusion
+
+
+Now you're the cool person who knows how to monitor their surveillance data in order to automatically detect outbreaks.
+
+<iframe src="https://giphy.com/gifs/5gXYzsVBmjIsw/html5" width="480" height="350" frameBorder="0" class="html5" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/superman-eOewytQL4tOOA">via GIPHY</a></p>
+
+If you want to know more about the subject, e.g. more algorithms, more maths, please head to the Journal of Statistical Software and read [our paper about `surveillance`](https://www.jstatsoft.org/article/view/v070i10). Aspects of your data you might want to better take into account might be seasonality, reporting delays, you name it: the chance is high that `surveillance` has something to offer. And tell your friends about `surveillance`!
+
+<iframe src="https://giphy.com/gifs/MjOlH8NgmXYdy/html5" width="480" height="270" frameBorder="0" class="html5" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/superman-eOewytQL4tOOA">via GIPHY</a></p>

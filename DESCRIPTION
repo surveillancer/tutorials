@@ -1,0 +1,17 @@
+Package: surveillancetutorials
+Type: Package
+Title: Tutorials for surveillance
+Version: 0.1.0.9000
+Authors@R: c(person("Michael", "Höhle", role = "aut"),
+	     person("Sebastian", "Meyer", role = "aut"),
+             person("Maëlle", "Salmon", role = "aut"),
+	     person("Dirk", "Schumacher", role = "aut"))
+Description: Just a dummy file.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Suggests:
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+RoxygenNote: 5.0.1
