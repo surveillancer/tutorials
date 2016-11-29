@@ -22,4 +22,9 @@ supported by the Swedish Research Council as part of the project
 *Statistical Modelling, Monitoring and Predictive Analytics against
 Infectious Disease Outbreaks* (grant number 2015-05182_VR).
 
-Please select [articles](https://surveillancer.github.io/tutorials/articles/) to get a list of tutorials.
+* Please select
+[articles](https://surveillancer.github.io/tutorials/articles/) to get
+a list of tutorials.
+* Alternatively, play with a
+  [shiny app](https://dirk.shinyapps.io/surveillance/) providing
+  insights on the effect of surveillance algorithms parameters
