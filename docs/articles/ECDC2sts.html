@@ -209,13 +209,9 @@ video of chunk animation
 </div>
 <div id="animation-with-incidence" class="section level3">
 <h3 class="hasAnchor"><html><body><a href="#animation-with-incidence" class="anchor"> </a></body></html>Animation with incidence</h3>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## Select 10 groups based on the quantiles of the incidence distribution
-breaks &lt;-<span class="st"> </span><span class="kw">quantile</span>(<span class="fl">1e6</span> *<span class="st"> </span><span class="kw">observed</span>(ecdc_sts) /<span class="st"> </span><span class="kw">population</span>(ecdc_sts),
-                   <span class="dt">probs =</span> <span class="kw">seq</span>(<span class="dv">0</span>,<span class="dv">1</span>,<span class="dt">length=</span><span class="dv">31</span>), <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)
-<span class="kw">animate</span>(ecdc_sts, <span class="dt">tps =</span> <span class="dv">49</span>:<span class="dv">96</span>, <span class="dt">sleep =</span> <span class="dv">0</span>, <span class="dt">verbose =</span> <span class="ot">FALSE</span>,
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">animate</span>(ecdc_sts, <span class="dt">tps =</span> <span class="dv">49</span>:<span class="dv">96</span>, <span class="dt">sleep =</span> <span class="dv">0</span>, <span class="dt">verbose =</span> <span class="ot">FALSE</span>,
         <span class="dt">timeplot =</span> <span class="kw">list</span>(<span class="dt">as.Date =</span> <span class="ot">TRUE</span>),
-        <span class="dt">population =</span> <span class="kw">colMeans</span>(<span class="kw">population</span>(ecdc_sts))/<span class="dv">1000000</span>,
-        <span class="dt">at =</span> <span class="kw">round</span>(breaks, <span class="dv">1</span>))</code></pre></div>
+        <span class="dt">population =</span> <span class="kw">colMeans</span>(<span class="kw">population</span>(ecdc_sts))/<span class="dv">1000000</span>)</code></pre></div>
 <video width="75%" controls loop><source src="ECDC2sts_files/figure-html/animation_incidence-.webm"></source><p>
 video of chunk animation_incidence
 </p>
