@@ -182,6 +182,16 @@ local({
 plot(ecdc_sts, type = observed ~ unit)  # see help("stsplot_space") for options
 ```
 
+To change the color key to a color-blind friendly version:
+
+```{r COLS}
+(COLS <- viridis::viridis_pal()(9))
+```
+```{r stsplot_space_colors}
+plot(ecdc_sts, type = observed ~ unit, col.regions = COLS)
+```
+
+
 ### Incidence map aggregated over time
 
 ```{r stsplot_space_incidence}
@@ -194,7 +204,9 @@ plot(ecdc_sts, type = observed ~ unit,
 ### Animation from 2011 to 2015
 
 ```{r animation, fig.show="animate", out.width="75%", fig.width=6, fig.height=8, cache=TRUE}
-animate(ecdc_sts, tps = 49:96, sleep = 0, verbose = FALSE) # see help("animate.sts") for options
+animate(ecdc_sts, tps = 49:96, sleep = 0, verbose = FALSE,
+        timeplot = list(as.Date = TRUE))
+## see help("animate.sts") for options ['as.Date' requires surveillance > 1.12.2]
 ```
 
 The [**animation**](https://CRAN.R-project.org/package=animation) package can be
@@ -209,6 +221,7 @@ PDF and videos. The `help("animate.sts")` contains an example.
 breaks <- quantile(1e6 * observed(ecdc_sts) / population(ecdc_sts),
                    probs = seq(0,1,length=20), na.rm = TRUE)
 animate(ecdc_sts, tps = 49:96, sleep = 0, verbose = FALSE,
+        timeplot = list(as.Date = TRUE),
         population = colMeans(population(ecdc_sts))/1000000,
         at = round(breaks, 1))
 ```
