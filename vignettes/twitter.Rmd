@@ -121,7 +121,17 @@ ts2 <- allTimes %>% left_join(ts, by="time") %>% group_by(time) %>%
   summarise(n=sum(n.x+n.y,na.rm=TRUE)) %>%
   filter(time > "2016-11-28 08:00:00 CET" & (time < "2016-11-30 12:00:00 CET"))
 
-ggplot(ts2, aes(x=time, y=n)) + geom_bar(stat="identity",alpha=.8) + theme(axis.text.x=element_text(angle=90, hjust=1)) + ylab("No. of tweets") + xlab("Time") + ggtitle(the_query) + scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00")
+ggplot(ts2, aes(x=time, y=n)) + geom_bar(stat="identity",alpha=.8) + theme(axis.text.x=element_text(angle=90, hjust=1)) + ylab("No. of tweets") + xlab("Time") + ggtitle(the_query) + scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 day",date_labels="Nov %d-%H:00")
 ```
 
+## Outbreak detection
+
+<center>
+<blockquote class="twitter-tweet" data-lang="de"><p lang="en" dir="ltr">New blog entry: Please RT to help me evaluate my <a href="https://twitter.com/hashtag/zombie?src=hash">#zombie</a> monitoring system - <a href="https://t.co/b0gNfpJ0RM">https://t.co/b0gNfpJ0RM</a> <a href="https://twitter.com/hashtag/zombieattack?src=hash">#zombieattack</a> <a href="https://twitter.com/hashtag/biosurveillance?src=hash">#biosurveillance</a> <a href="https://twitter.com/hashtag/rstats?src=hash">#rstats</a> <a href="https://t.co/N3PTZBnaw4">pic.twitter.com/N3PTZBnaw4</a></p>&mdash; Michael Höhle (\@m_hoehle) <a href="https://twitter.com/m_hoehle/status/780037067183157248">25. September 2016</a></blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+</center>
+
+For a not so serious version of the above, see this
+[blog post](http://staff.math.su.se/hoehle/blog/2016/09/25/sootb.html)
+on how to detect zombie outbreaks using twitter.
 
