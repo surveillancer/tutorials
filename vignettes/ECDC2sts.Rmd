@@ -217,11 +217,7 @@ PDF and videos. The `help("animate.sts")` contains an example.
 ### Animation with incidence
 
 ```{r animation_incidence, fig.show="animate", out.width="75%", fig.width=6, fig.height=8, cache=TRUE}
-## Select 10 groups based on the quantiles of the incidence distribution
-breaks <- quantile(1e6 * observed(ecdc_sts) / population(ecdc_sts),
-                   probs = seq(0,1,length=31), na.rm = TRUE)
 animate(ecdc_sts, tps = 49:96, sleep = 0, verbose = FALSE,
         timeplot = list(as.Date = TRUE),
-        population = colMeans(population(ecdc_sts))/1000000,
-        at = round(breaks, 1))
+        population = colMeans(population(ecdc_sts))/1000000)
 ```
