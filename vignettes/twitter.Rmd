@@ -1,5 +1,5 @@
 ---
-title: "Monitor the Twitter Feed"
+title: "Monitor the Conference Twitter Feed"
 author: "The Hackathon Team"
 date: "30 November 2016"
 output:
@@ -55,16 +55,15 @@ the_query <- "#ESCAIDE2016 OR #ESCAIDE OR @ESCAIDE"
 
 ```{r,eval=FALSE}
 tweets <- search_tweets(the_query, n = 15000, type="recent", token = twitter_token)
-head(tweets)
-nrow(tweets)
 ```
-
 ````{r,echo=FALSE,eval=FALSE}
 saveRDS(object=tweets,file="data/tweets.rds")
 ```
-
 ```{r,echo=FALSE}
 tweets <- readRDS(file="data/tweets.rds")
+```
+```{r, R.options=list(width=300)}
+DT::datatable(head(tweets))
 ```
 
 A total of `r nrow(tweets)` tweets were collected.
@@ -128,11 +127,11 @@ ts2 <- allTimes %>% left_join(ts, by="time") %>% group_by(time) %>%
 
 
 ```{r}
-p <- ggplot(ts2) + 
-  geom_bar(aes(x=time, y=n), stat="identity",alpha=.8) + 
-  theme(axis.text.x=element_text(angle=90, hjust=1)) + 
-  ylab("No. of tweets") + 
-  xlab("Time") + ggtitle(the_query) + 
+p <- ggplot(ts2) +
+  geom_bar(aes(x=time, y=n), stat="identity",alpha=.8) +
+  theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  ylab("No. of tweets") +
+  xlab("Time") + ggtitle(the_query) +
   scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00") +
   theme(axis.text.x = element_text(angle = 60, size = 6))
 p
@@ -154,7 +153,7 @@ conference_program_slots <- tibble::tribble(
   "2016-11-29 14:30:00 CET",   "2016-11-29 15:30:00 CET", "Parallel Session",
   "2016-11-29 15:30:00 CET",   "2016-11-29 16:30:00 CET", "Poster Session",
   "2016-11-28 17:00:00 CET",   "2016-11-28 18:30:00 CET", "Parallel Session",
-  
+
   "2016-11-30 09:00:00 CET",   "2016-11-30 10:30:00 CET", "Plenary Talks",
   "2016-11-30 11:00:00 CET",   "2016-11-30 12:40:00 CET", "Parallel Session",
   "2016-11-30 14:30:00 CET",   "2016-11-30 15:30:00 CET", "Parallel Session",
@@ -164,9 +163,9 @@ conference_program_slots <- tibble::tribble(
 ```
 
 ```{r}
-p + geom_rect(data = filter(conference_program_slots, to < "2016-11-30 12:00:00 CET"), 
-            aes(xmin = from, xmax = to, ymin = 0, ymax = max(ts$n), fill = slot_type), alpha = 0.4) + 
-  theme(legend.position = "bottom") + 
+p + geom_rect(data = filter(conference_program_slots, to < "2016-11-30 12:00:00 CET"),
+            aes(xmin = from, xmax = to, ymin = 0, ymax = max(ts$n), fill = slot_type), alpha = 0.4) +
+  theme(legend.position = "bottom") +
   viridis::scale_fill_viridis(discrete = TRUE, name = "Session Type:")
 ```
 
@@ -183,28 +182,35 @@ tweet_sts <- surveillance::sts(observed = ts2$n, # weekly number of cases
 monitored_tweets <- earsC(tweet_sts, control = list(baseline = baseline))
 monitored_tweets_df <- as.data.frame(monitored_tweets)
 
-monitored_tweets_df <- mutate(monitored_tweets_df, 
+monitored_tweets_df <- mutate(monitored_tweets_df,
                           time = ts2$time[(baseline + 1):
                                            nrow(ts2) - 1])
 ggplot(monitored_tweets_df) +
   geom_bar(aes(time, observed, fill = alarm), stat = "identity") +
   viridis::scale_fill_viridis(discrete = TRUE, name = "Alarm:") +
-  geom_step(aes(time, upperbound)) + 
-  theme(legend.position = "bottom") + 
-  theme(axis.text.x=element_text(angle=90, hjust=1)) + 
-  ylab("No. of tweets") + 
-  xlab("Time") + ggtitle(the_query) + 
+  geom_step(aes(time, upperbound)) +
+  theme(legend.position = "bottom") +
+  theme(axis.text.x=element_text(angle=90, hjust=1)) +
+  ylab("No. of tweets") +
+  xlab("Time") + ggtitle(the_query) +
   scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00") +
   theme(axis.text.x = element_text(angle = 60, size = 6))
 
 ```
+
+### Instant citizen science experiment
+
+Let's see, if we can artificially inject an outbreak into the time
+series. Retweet the post below, if you want to participate in an
+instant citizen science experiment.
 
 <center>
 <blockquote class="twitter-tweet" data-lang="de"><p lang="en" dir="ltr">New blog entry: Please RT to help me evaluate my <a href="https://twitter.com/hashtag/zombie?src=hash">#zombie</a> monitoring system - <a href="https://t.co/b0gNfpJ0RM">https://t.co/b0gNfpJ0RM</a> <a href="https://twitter.com/hashtag/zombieattack?src=hash">#zombieattack</a> <a href="https://twitter.com/hashtag/biosurveillance?src=hash">#biosurveillance</a> <a href="https://twitter.com/hashtag/rstats?src=hash">#rstats</a> <a href="https://t.co/N3PTZBnaw4">pic.twitter.com/N3PTZBnaw4</a></p>&mdash; Michael Höhle (\@m_hoehle) <a href="https://twitter.com/m_hoehle/status/780037067183157248">25. September 2016</a></blockquote>
 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 </center>
 
-For a not so serious version of the above, see this
+For a not so serious version of the above citizen science experiment,
+see this
 [blog post](http://staff.math.su.se/hoehle/blog/2016/09/25/sootb.html)
 on how to detect zombie outbreaks using twitter.
 
