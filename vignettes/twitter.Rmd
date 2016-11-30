@@ -23,8 +23,10 @@ The [README.md](https://github.com/mkearney/rtweet) of the `rtweet`
 package provides helpful information on how to create a twitter app to
 automatically search tweets using the twitter AP
 
-```{r}
-require(rtweet)
+```{r, message=FALSE}
+library(rtweet)
+library(ggplot2)
+library(dplyr)
 ```
 
 ```{r,eval=FALSE}
@@ -45,8 +47,11 @@ Perform the query, here we shall search for tweets containing the
 hashtag `#ESCAIDE2016`. The result is a list of individual tweets --
 this is almost similar to the well known concept of a linelist:
 
-```{r,eval=FALSE}
+```{r}
 the_query <- "#ESCAIDE2016 OR #ESCAIDE OR @ESCAIDE"
+```
+
+```{r,eval=FALSE}
 tweets <- search_tweets(the_query, n = 15000, type="recent", token = twitter_token)
 head(tweets)
 nrow(tweets)
@@ -69,8 +74,6 @@ Who's tweeting? The tweets originate from a total of
 number of tweets) are:
 
 ```{r,message=FALSE}
-library(ggplot2)
-library(dplyr)
 
 top_tweeters <- tweets %>% group_by(screen_name) %>%
   summarise(nTweets=n()) %>%
@@ -101,8 +104,7 @@ ggplot( tweets, aes(source)) + geom_bar() + coord_flip()
 
 Time series of the tweets (without interruptions):
 ```{r}
-require(lubridate)
-require(dplyr)
+library(lubridate)
 
 ## Make POSIX function for dplyr re-use
 make_posix <- . %>% mutate(time=lubridate::ymd_hms(paste0(year,"-",month,"-",day," ",hour,":00:00"),tz="CET"))
