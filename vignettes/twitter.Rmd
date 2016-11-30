@@ -57,7 +57,7 @@ the_query <- "#ESCAIDE2016 OR #ESCAIDE OR @ESCAIDE"
 tweets <- search_tweets(the_query, n = 15000, type="recent", token = twitter_token)
 ```
 ````{r,echo=FALSE,eval=FALSE}
-saveRDS(object=tweets,file="data/tweets.rds")
+saveRDS(object=tweets,file="vignettes/data/tweets.rds")
 ```
 ```{r,echo=FALSE}
 tweets <- readRDS(file="data/tweets.rds")
@@ -110,30 +110,41 @@ library(lubridate)
 ## Make POSIX function for dplyr re-use
 make_posix <- . %>% mutate(time=lubridate::ymd_hms(paste0(year,"-",month,"-",day," ",hour,":00:00"),tz="CET"))
 
+##Are tweets a retweet of our tweet?
+#the_tweet_id <- tweets %>% filter(screen_name == "m_hoehle") %>% head(n=1) %>% .[["status_id"]] %>% as.character
+tweets <- tweets %>% mutate( is_retweet_of_us = (retweet_status_id == 803931871662972928))
+#tweets2 <- tweets %>% mutate_( paste0("is_retweet_of_us = (retweet_status_id == ", the_tweet_id,")"))
+
 ## All possible time points
 ts <- tweets %>%
   mutate(hour = sprintf("%.02d",lubridate::hour(created_at)), day=lubridate::day(created_at),month=lubridate::month(created_at),year=lubridate::year(created_at)) %>%
   make_posix %>%
-  group_by(time) %>% summarise(n=n())
+  group_by(time, is_retweet_of_us) %>%
+  summarise(n=n(),n_retweets=sum(is_retweet_of_us,na.rm=TRUE),n_noretweets=n-n_retweets)
 
 allTimes <- expand.grid(year=2016, month=11, day=25:30, hour=sprintf("%.02d",0:23)) %>%
   make_posix %>%
   arrange(time) %>% mutate(n=0)
 
 ts2 <- allTimes %>% left_join(ts, by="time") %>% group_by(time) %>%
-  summarise(n=sum(n.x+n.y,na.rm=TRUE)) %>%
-  filter(time > "2016-11-28 08:00:00 CET" & (time < "2016-11-30 12:00:00 CET"))
+  filter(time > "2016-11-28 08:00:00 CET" & (time < "2016-11-30 17:30:00 CET")) %>% select(-n.x,-is_retweet_of_us,-n.y)
+
+ts2 <- rbind(ts2 %>% rename(n=n_retweets) %>% select(-n_noretweets) %>% mutate(group="retweet"),
+             ts2 %>% rename(n=n_noretweets) %>% select(-n_retweets) %>% mutate(group="no_retweet"))
+ts2 <- ts2 %>% mutate(group = factor(group))
+
 ```
 
 
 ```{r}
 p <- ggplot(ts2) +
-  geom_bar(aes(x=time, y=n), stat="identity",alpha=.8) +
+  geom_bar(aes(x=time, y=n, fill=group), stat="identity",alpha=.8) +
   theme(axis.text.x=element_text(angle=90, hjust=1)) +
   ylab("No. of tweets") +
   xlab("Time") + ggtitle(the_query) +
   scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00") +
-  theme(axis.text.x = element_text(angle = 60, size = 6))
+  theme(axis.text.x = element_text(angle = 60, size = 6)) +
+  scale_fill_discrete(name="Tweet Type")
 p
 ```
 
@@ -163,7 +174,7 @@ conference_program_slots <- tibble::tribble(
 ```
 
 ```{r}
-p + geom_rect(data = filter(conference_program_slots, to < "2016-11-30 12:00:00 CET"),
+p + geom_rect(data = filter(conference_program_slots, to < "2016-11-30 17:30:00 CET"),
             aes(xmin = from, xmax = to, ymin = 0, ymax = max(ts$n), fill = slot_type), alpha = 0.4) +
   theme(legend.position = "bottom") +
   viridis::scale_fill_viridis(discrete = TRUE, name = "Session Type:")
