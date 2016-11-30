@@ -114,9 +114,21 @@ ts2 &lt;-<span class="st"> </span>allTimes %&gt;%<span class="st"> </span><span 
 <span class="st">  </span><span class="kw">summarise</span>(<span class="dt">n=</span><span class="kw">sum</span>(n.x+n.y,<span class="dt">na.rm=</span><span class="ot">TRUE</span>)) %&gt;%
 <span class="st">  </span><span class="kw">filter</span>(time &gt;<span class="st"> "2016-11-28 08:00:00 CET"</span> &amp;<span class="st"> </span>(time &lt;<span class="st"> "2016-11-30 12:00:00 CET"</span>))
 
-<span class="kw">ggplot</span>(ts2, <span class="kw">aes</span>(<span class="dt">x=</span>time, <span class="dt">y=</span>n)) +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">stat=</span><span class="st">"identity"</span>,<span class="dt">alpha=</span>.<span class="dv">8</span>) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x=</span><span class="kw">element_text</span>(<span class="dt">angle=</span><span class="dv">90</span>, <span class="dt">hjust=</span><span class="dv">1</span>)) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">"No. of tweets"</span>) +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">"Time"</span>) +<span class="st"> </span><span class="kw">ggtitle</span>(the_query) +<span class="st"> </span><span class="kw">scale_x_datetime</span>(<span class="dt">date_minor_breaks=</span><span class="st">"1 hour"</span>,<span class="dt">date_breaks=</span><span class="st">"1 hour"</span>,<span class="dt">date_labels=</span><span class="st">"Nov %d-%H:00"</span>)</code></pre></div>
+<span class="kw">ggplot</span>(ts2, <span class="kw">aes</span>(<span class="dt">x=</span>time, <span class="dt">y=</span>n)) +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">stat=</span><span class="st">"identity"</span>,<span class="dt">alpha=</span>.<span class="dv">8</span>) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x=</span><span class="kw">element_text</span>(<span class="dt">angle=</span><span class="dv">90</span>, <span class="dt">hjust=</span><span class="dv">1</span>)) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">"No. of tweets"</span>) +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">"Time"</span>) +<span class="st"> </span><span class="kw">ggtitle</span>(the_query) +<span class="st"> </span><span class="kw">scale_x_datetime</span>(<span class="dt">date_minor_breaks=</span><span class="st">"1 hour"</span>,<span class="dt">date_breaks=</span><span class="st">"1 day"</span>,<span class="dt">date_labels=</span><span class="st">"Nov %d-%H:00"</span>)</code></pre></div>
 <p><img src="twitter_files/figure-html/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;"></p>
 </div>
+</div>
+<div id="outbreak-detection" class="section level2">
+<h2 class="hasAnchor"><html><body><a href="#outbreak-detection" class="anchor"> </a></body></html>Outbreak detection</h2>
+<center>
+<blockquote class="twitter-tweet" data-lang="de">
+<p lang="en" dir="ltr">
+New blog entry: Please RT to help me evaluate my <a href="https://twitter.com/hashtag/zombie?src=hash">#zombie</a> monitoring system - <a href="https://t.co/b0gNfpJ0RM">https://t.co/b0gNfpJ0RM</a> <a href="https://twitter.com/hashtag/zombieattack?src=hash">#zombieattack</a> <a href="https://twitter.com/hashtag/biosurveillance?src=hash">#biosurveillance</a> <a href="https://twitter.com/hashtag/rstats?src=hash">#rstats</a> <a href="https://t.co/N3PTZBnaw4">pic.twitter.com/N3PTZBnaw4</a>
+</p>
+&mdash; Michael H&ouml;hle (@m_hoehle) <a href="https://twitter.com/m_hoehle/status/780037067183157248">25. September 2016</a>
+</blockquote>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script></center>
+<p>For a not so serious version of the above, see this <a href="http://staff.math.su.se/hoehle/blog/2016/09/25/sootb.html">blog post</a> on how to detect zombie outbreaks using twitter.</p>
 </div>
 </div>
   </div>
@@ -126,6 +138,7 @@ ts2 &lt;-<span class="st"> </span>allTimes %&gt;%<span class="st"> </span><span 
       <h2>Contents</h2>
       <ul class="nav nav-pills nav-stacked"><li><a href="#setting-up-the-twitter-api">Setting up the twitter API</a></li>
       <li><a href="#performing-queries">Performing Queries</a></li>
+      <li><a href="#outbreak-detection">Outbreak detection</a></li>
       </ul></div>
       </div>
 
