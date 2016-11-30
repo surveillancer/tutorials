@@ -129,15 +129,20 @@ allTimes <- expand.grid(year=2016, month=11, day=25:30, hour=sprintf("%.02d",0:2
 ts2 <- allTimes %>% left_join(ts, by="time") %>% group_by(time) %>%
   filter(time > "2016-11-28 08:00:00 CET" & (time < "2016-11-30 17:30:00 CET")) %>% select(-n.x,-is_retweet_of_us,-n.y)
 
-ts2 <- rbind(ts2 %>% rename(n=n_retweets) %>% select(-n_noretweets) %>% mutate(group="retweet"),
+na2zero <- function(x) {x[is.na(x)] <- 0 ; return(x)}
+
+ts2 <- ts2 %>% mutate(n_retweets = na2zero(n_retweets),
+                      n_noretweets = na2zero(n_noretweets))
+
+ts3 <- rbind(ts2 %>% rename(n=n_retweets) %>% select(-n_noretweets) %>% mutate(group="retweet"),
              ts2 %>% rename(n=n_noretweets) %>% select(-n_retweets) %>% mutate(group="no_retweet"))
-ts2 <- ts2 %>% mutate(group = factor(group))
+ts3 <- ts3 %>% mutate(group = factor(group))
 
 ```
 
 
 ```{r}
-p <- ggplot(ts2) +
+p <- ggplot(ts3) +
   geom_bar(aes(x=time, y=n, fill=group), stat="identity",alpha=.8) +
   theme(axis.text.x=element_text(angle=90, hjust=1)) +
   ylab("No. of tweets") +
@@ -187,7 +192,7 @@ We shall use the EARS C method for performing outbreak detection.
 ```{r ears}
 library(surveillance)
 baseline <- 7
-tweet_sts <- surveillance::sts(observed = ts2$n, # weekly number of cases
+tweet_sts <- surveillance::sts(observed = ts2$n_retweets + ts2$n_noretweets, # weekly number of cases
                                epoch = as.numeric(ts2$time))
 
 monitored_tweets <- earsC(tweet_sts, control = list(baseline = baseline))

@@ -117,10 +117,15 @@ allTimes &lt;-<span class="st"> </span><span class="kw">expand.grid</span>(<span
 ts2 &lt;-<span class="st"> </span>allTimes %&gt;%<span class="st"> </span><span class="kw">left_join</span>(ts, <span class="dt">by=</span><span class="st">"time"</span>) %&gt;%<span class="st"> </span><span class="kw">group_by</span>(time) %&gt;%
 <span class="st">  </span><span class="kw">filter</span>(time &gt;<span class="st"> "2016-11-28 08:00:00 CET"</span> &amp;<span class="st"> </span>(time &lt;<span class="st"> "2016-11-30 17:30:00 CET"</span>)) %&gt;%<span class="st"> </span><span class="kw">select</span>(-n.x,-is_retweet_of_us,-n.y)
 
-ts2 &lt;-<span class="st"> </span><span class="kw">rbind</span>(ts2 %&gt;%<span class="st"> </span><span class="kw">rename</span>(<span class="dt">n=</span>n_retweets) %&gt;%<span class="st"> </span><span class="kw">select</span>(-n_noretweets) %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">group=</span><span class="st">"retweet"</span>),
+na2zero &lt;-<span class="st"> </span>function(x) {x[<span class="kw">is.na</span>(x)] &lt;-<span class="st"> </span><span class="dv">0</span> ; <span class="kw">return</span>(x)}
+
+ts2 &lt;-<span class="st"> </span>ts2 %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">n_retweets =</span> <span class="kw">na2zero</span>(n_retweets),
+                      <span class="dt">n_noretweets =</span> <span class="kw">na2zero</span>(n_noretweets))
+
+ts3 &lt;-<span class="st"> </span><span class="kw">rbind</span>(ts2 %&gt;%<span class="st"> </span><span class="kw">rename</span>(<span class="dt">n=</span>n_retweets) %&gt;%<span class="st"> </span><span class="kw">select</span>(-n_noretweets) %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">group=</span><span class="st">"retweet"</span>),
              ts2 %&gt;%<span class="st"> </span><span class="kw">rename</span>(<span class="dt">n=</span>n_noretweets) %&gt;%<span class="st"> </span><span class="kw">select</span>(-n_retweets) %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">group=</span><span class="st">"no_retweet"</span>))
-ts2 &lt;-<span class="st"> </span>ts2 %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">group =</span> <span class="kw">factor</span>(group))</code></pre></div>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(ts2) +
+ts3 &lt;-<span class="st"> </span>ts3 %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">group =</span> <span class="kw">factor</span>(group))</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">p &lt;-<span class="st"> </span><span class="kw">ggplot</span>(ts3) +
 <span class="st">  </span><span class="kw">geom_bar</span>(<span class="kw">aes</span>(<span class="dt">x=</span>time, <span class="dt">y=</span>n, <span class="dt">fill=</span>group), <span class="dt">stat=</span><span class="st">"identity"</span>,<span class="dt">alpha=</span>.<span class="dv">8</span>) +
 <span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x=</span><span class="kw">element_text</span>(<span class="dt">angle=</span><span class="dv">90</span>, <span class="dt">hjust=</span><span class="dv">1</span>)) +
 <span class="st">  </span><span class="kw">ylab</span>(<span class="st">"No. of tweets"</span>) +
@@ -129,7 +134,6 @@ ts2 &lt;-<span class="st"> </span>ts2 %&gt;%<span class="st"> </span><span class
 <span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">60</span>, <span class="dt">size =</span> <span class="dv">6</span>)) +
 <span class="st">  </span><span class="kw">scale_fill_discrete</span>(<span class="dt">name=</span><span class="st">"Tweet Type"</span>)
 p</code></pre></div>
-<pre><code>## Warning: Removed 12 rows containing missing values (position_stack).</code></pre>
 <p><img src="twitter_files/figure-html/unnamed-chunk-12-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Now we overlay the conference program</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">conference_program_slots &lt;-<span class="st"> </span>tibble::<span class="kw">tribble</span>(
@@ -156,7 +160,6 @@ p</code></pre></div>
             <span class="kw">aes</span>(<span class="dt">xmin =</span> from, <span class="dt">xmax =</span> to, <span class="dt">ymin =</span> <span class="dv">0</span>, <span class="dt">ymax =</span> <span class="kw">max</span>(ts$n), <span class="dt">fill =</span> slot_type), <span class="dt">alpha =</span> <span class="fl">0.4</span>) +
 <span class="st">  </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">"bottom"</span>) +
 <span class="st">  </span>viridis::<span class="kw">scale_fill_viridis</span>(<span class="dt">discrete =</span> <span class="ot">TRUE</span>, <span class="dt">name =</span> <span class="st">"Session Type:"</span>)</code></pre></div>
-<pre><code>## Warning: Removed 12 rows containing missing values (position_stack).</code></pre>
 <p><img src="twitter_files/figure-html/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;"></p>
 </div>
 </div>
@@ -165,7 +168,7 @@ p</code></pre></div>
 <p>We shall use the EARS C method for performing outbreak detection.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(surveillance)
 baseline &lt;-<span class="st"> </span><span class="dv">7</span>
-tweet_sts &lt;-<span class="st"> </span>surveillance::<span class="kw">sts</span>(<span class="dt">observed =</span> ts2$n, <span class="co"># weekly number of cases</span>
+tweet_sts &lt;-<span class="st"> </span>surveillance::<span class="kw">sts</span>(<span class="dt">observed =</span> ts2$n_retweets +<span class="st"> </span>ts2$n_noretweets, <span class="co"># weekly number of cases</span>
                                <span class="dt">epoch =</span> <span class="kw">as.numeric</span>(ts2$time))
 
 monitored_tweets &lt;-<span class="st"> </span><span class="kw">earsC</span>(tweet_sts, <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">baseline =</span> baseline))
@@ -184,7 +187,6 @@ monitored_tweets_df &lt;-<span class="st"> </span><span class="kw">mutate</span>
 <span class="st">  </span><span class="kw">xlab</span>(<span class="st">"Time"</span>) +<span class="st"> </span><span class="kw">ggtitle</span>(the_query) +
 <span class="st">  </span><span class="kw">scale_x_datetime</span>(<span class="dt">date_minor_breaks=</span><span class="st">"1 hour"</span>,<span class="dt">date_breaks=</span><span class="st">"1 hour"</span>,<span class="dt">date_labels=</span><span class="st">"Nov %d-%H:00"</span>) +
 <span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">60</span>, <span class="dt">size =</span> <span class="dv">6</span>))</code></pre></div>
-<pre><code>## Warning: Removed 12 rows containing missing values (position_stack).</code></pre>
 <p><img src="twitter_files/figure-html/ears-1.png" width="672" style="display: block; margin: auto;"></p>
 <div id="instant-citizen-science-experiment" class="section level3">
 <h3 class="hasAnchor"><html><body><a href="#instant-citizen-science-experiment" class="anchor"> </a></body></html>Instant citizen science experiment</h3>
