@@ -124,8 +124,50 @@ allTimes <- expand.grid(year=2016, month=11, day=25:30, hour=sprintf("%.02d",0:2
 ts2 <- allTimes %>% left_join(ts, by="time") %>% group_by(time) %>%
   summarise(n=sum(n.x+n.y,na.rm=TRUE)) %>%
   filter(time > "2016-11-28 08:00:00 CET" & (time < "2016-11-30 12:00:00 CET"))
+```
 
-ggplot(ts2, aes(x=time, y=n)) + geom_bar(stat="identity",alpha=.8) + theme(axis.text.x=element_text(angle=90, hjust=1)) + ylab("No. of tweets") + xlab("Time") + ggtitle(the_query) + scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 day",date_labels="Nov %d-%H:00")
+
+```{r}
+p <- ggplot(ts2) + 
+  geom_bar(aes(x=time, y=n), stat="identity",alpha=.8) + 
+  theme(axis.text.x=element_text(angle=90, hjust=1)) + 
+  ylab("No. of tweets") + 
+  xlab("Time") + ggtitle(the_query) + 
+  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00") +
+  theme(axis.text.x = element_text(angle = 60, size = 6))
+p
+```
+
+Now we overlay the conference program
+
+```{r}
+conference_program_slots <- tibble::tribble(
+  ~from, ~to, ~slot_type,
+  "2016-11-28 09:00:00 CET",   "2016-11-28 10:30:00 CET", "Plenary Talks",
+  "2016-11-28 11:00:00 CET",   "2016-11-28 12:40:00 CET", "Parallel Session",
+  "2016-11-28 14:30:00 CET",   "2016-11-28 15:30:00 CET", "Parallel Session",
+  "2016-11-28 15:30:00 CET",   "2016-11-28 16:30:00 CET", "Poster Session",
+  "2016-11-28 17:00:00 CET",   "2016-11-28 18:30:00 CET", "Plenary Talks",
+
+  "2016-11-29 09:00:00 CET",   "2016-11-29 10:30:00 CET", "Plenary Talks",
+  "2016-11-29 11:00:00 CET",   "2016-11-29 12:40:00 CET", "Parallel Session",
+  "2016-11-29 14:30:00 CET",   "2016-11-29 15:30:00 CET", "Parallel Session",
+  "2016-11-29 15:30:00 CET",   "2016-11-29 16:30:00 CET", "Poster Session",
+  "2016-11-28 17:00:00 CET",   "2016-11-28 18:30:00 CET", "Parallel Session",
+  
+  "2016-11-30 09:00:00 CET",   "2016-11-30 10:30:00 CET", "Plenary Talks",
+  "2016-11-30 11:00:00 CET",   "2016-11-30 12:40:00 CET", "Parallel Session",
+  "2016-11-30 14:30:00 CET",   "2016-11-30 15:30:00 CET", "Parallel Session",
+  "2016-11-30 15:30:00 CET",   "2016-11-30 16:30:00 CET", "Poster Session",
+  "2016-11-30 17:00:00 CET",   "2016-11-30 18:30:00 CET", "Plenary Talks"
+) %>% mutate(from = as.POSIXct(from), to = as.POSIXct(to))
+```
+
+```{r}
+p + geom_rect(data = filter(conference_program_slots, to < "2016-11-30 12:00:00 CET"), 
+            aes(xmin = from, xmax = to, ymin = 0, ymax = max(ts$n), fill = slot_type), alpha = 0.4) + 
+  theme(legend.position = "bottom") + 
+  viridis::scale_fill_viridis(discrete = TRUE, name = "Session Type:")
 ```
 
 ## Outbreak detection
@@ -133,7 +175,7 @@ ggplot(ts2, aes(x=time, y=n)) + geom_bar(stat="identity",alpha=.8) + theme(axis.
 We shall use the EARS C method for performing outbreak detection.
 
 ```{r ears}
-library("surveillance")
+library(surveillance)
 baseline <- 7
 tweet_sts <- surveillance::sts(observed = ts2$n, # weekly number of cases
                                epoch = as.numeric(ts2$time))
@@ -146,8 +188,14 @@ monitored_tweets_df <- mutate(monitored_tweets_df,
                                            nrow(ts2) - 1])
 ggplot(monitored_tweets_df) +
   geom_bar(aes(time, observed, fill = alarm), stat = "identity") +
-  viridis::scale_fill_viridis(discrete = TRUE) +
-  geom_step(aes(time, upperbound))
+  viridis::scale_fill_viridis(discrete = TRUE, name = "Alarm:") +
+  geom_step(aes(time, upperbound)) + 
+  theme(legend.position = "bottom") + 
+  theme(axis.text.x=element_text(angle=90, hjust=1)) + 
+  ylab("No. of tweets") + 
+  xlab("Time") + ggtitle(the_query) + 
+  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00") +
+  theme(axis.text.x = element_text(angle = 60, size = 6))
 
 ```
 
