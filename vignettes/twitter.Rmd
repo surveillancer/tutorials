@@ -43,13 +43,15 @@ this is almost similar to the well known concept of a linelist:
 the_query <- "#ESCAIDE2016"
 tweets <- search_tweets(the_query, n = 15000, type="recent", token = twitter_token)
 head(tweets)
+
+```
+````{r,echo=FALSE,eval=FALSE}
 saveRDS(object=tweets,file="tweets.rds")
 ```
-
-```{r}
+```{r,echo=FALSE}
 tweets <- readRDS(file="tweets.rds")
 ```
-A total of `r nrow(tweets)` were collected.
+A total of `r nrow(tweets)` tweets were collected.
 
 ### Descriptive Analysis
 
@@ -75,9 +77,11 @@ ggplot( tweets, aes(source)) + geom_bar() + coord_flip()
 
 Time series of the tweets (without interruptions):
 ```{r}
+require(lubridate)
+
 ts <- tweets %>%
-  mutate(hour = sprintf("%.02d",hour(created_at)), day=day(created_at)) %>%
-  unite("time",c(day,hour)) %>% mutate(time2=factor(time)) %>%
+  mutate(hour = sprintf("%.02d",hour(created_at)), day=day(created_at),month=month(created_at),year=year(created_at)) %>%
+  unite("time",c(year,month,day,hour)) %>% mutate(time2=factor(time)) %>%
   count(time2) %>% mutate(time3 = 1:n())
 ggplot(ts, aes(x=time2, weight=n)) + geom_bar() + theme(axis.text.x=element_text(angle=90, hjust=1)) + ylab("No. of tweets") + xlab("Time")
 ```
@@ -97,6 +101,3 @@ tweets %>%
        color = "")
 ```
 
-## Artificial alarm
-
-foobar
