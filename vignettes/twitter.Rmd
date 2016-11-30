@@ -2,7 +2,9 @@
 title: "Monitor the Twitter Feed"
 author: "The Hackathon Team"
 date: "30 November 2016"
-output: html_document
+output:
+ html_document:
+   self_contained: no
 ---
 
 ```{r setup, include = FALSE}
@@ -127,6 +129,27 @@ ggplot(ts2, aes(x=time, y=n)) + geom_bar(stat="identity",alpha=.8) + theme(axis.
 ```
 
 ## Outbreak detection
+
+We shall use the EARS C method for performing outbreak detection.
+
+```{r ears}
+library("surveillance")
+baseline <- 7
+tweet_sts <- surveillance::sts(observed = ts2$n, # weekly number of cases
+                               epoch = as.numeric(ts2$time))
+
+monitored_tweets <- earsC(tweet_sts, control = list(baseline = baseline))
+monitored_tweets_df <- as.data.frame(monitored_tweets)
+
+monitored_tweets_df <- mutate(monitored_tweets_df, 
+                          time = ts2$time[(baseline + 1):
+                                           nrow(ts2) - 1])
+ggplot(monitored_tweets_df) +
+  geom_bar(aes(time, observed, fill = alarm), stat = "identity") +
+  viridis::scale_fill_viridis(discrete = TRUE) +
+  geom_step(aes(time, upperbound))
+
+```
 
 <center>
 <blockquote class="twitter-tweet" data-lang="de"><p lang="en" dir="ltr">New blog entry: Please RT to help me evaluate my <a href="https://twitter.com/hashtag/zombie?src=hash">#zombie</a> monitoring system - <a href="https://t.co/b0gNfpJ0RM">https://t.co/b0gNfpJ0RM</a> <a href="https://twitter.com/hashtag/zombieattack?src=hash">#zombieattack</a> <a href="https://twitter.com/hashtag/biosurveillance?src=hash">#biosurveillance</a> <a href="https://twitter.com/hashtag/rstats?src=hash">#rstats</a> <a href="https://t.co/N3PTZBnaw4">pic.twitter.com/N3PTZBnaw4</a></p>&mdash; Michael Höhle (\@m_hoehle) <a href="https://twitter.com/m_hoehle/status/780037067183157248">25. September 2016</a></blockquote>
