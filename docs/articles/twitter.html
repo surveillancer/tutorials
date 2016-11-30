@@ -47,30 +47,31 @@
 <p>This tutorial illustrates how one extracts data from twitter using <code>R</code> in order to quickly establish a tweet based monitoring system for critical event monitoring. We will use the <code>rtweet</code> package to harvest the data using the <a href="https://dev.twitter.com/overview/api">twitter API</a> and subsequently monitor them with the <code>surveillance</code> package.</p>
 <div id="setting-up-the-twitter-api" class="section level2">
 <h2 class="hasAnchor"><html><body><a href="#setting-up-the-twitter-api" class="anchor"> </a></body></html>Setting up the twitter API</h2>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(rtweet)
-
-<span class="co"># A file containing the information of your twitter app. To protect the</span>
+<p>The <a href="https://github.com/mkearney/rtweet">README.md</a> of the <code>rtweet</code> package provides helpful information on how to create a twitter app to automatically search tweets using the twitter AP</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(rtweet)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># A file containing the information of your twitter app. To protect the</span>
 <span class="co"># information stored here, this is kept outside the public git repository.</span>
 <span class="co">#</span>
 <span class="co"># The contents of the file are simply:</span>
-<span class="co"># twitter_token &lt;- create_token(app = "zombiemonitor", # whatever you named app</span>
+<span class="co"># twitter_token &lt;- create_token(app = "surveillance_trends", # whatever you named app</span>
 <span class="co">#   consumer_key = "2zIXXX4L6USa4UfXXXXXXXXXX",</span>
 <span class="co">#   consumer_secret = "oXXXXXXXSwwXXXXXXXXXXXXXXsXXXXXXXmXXXXXXXX")</span>
 
-<span class="kw">source</span>(<span class="st">"~/Sandbox/Twitter-Trends/auth-zombie.R"</span>,<span class="dt">encoding=</span><span class="st">"UTF8"</span>)</code></pre></div>
+<span class="kw">source</span>(<span class="st">"~/Sandbox/Twitter-Trends/auth-trends.R"</span>,<span class="dt">encoding=</span><span class="st">"UTF8"</span>)</code></pre></div>
 </div>
 <div id="performing-queries" class="section level2">
 <h2 class="hasAnchor"><html><body><a href="#performing-queries" class="anchor"> </a></body></html>Performing Queries</h2>
 <p>Perform the query, here we shall search for tweets containing the hashtag <code>#ESCAIDE2016</code>. The result is a list of individual tweets &ndash; this is almost similar to the well known concept of a linelist:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">the_query &lt;-<span class="st"> "#ESCAIDE2016"</span>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">the_query &lt;-<span class="st"> "#ESCAIDE2016 OR #ESCAIDE OR @ESCAIDE"</span>
 tweets &lt;-<span class="st"> </span><span class="kw">search_tweets</span>(the_query, <span class="dt">n =</span> <span class="dv">15000</span>, <span class="dt">type=</span><span class="st">"recent"</span>, <span class="dt">token =</span> twitter_token)
-<span class="kw">head</span>(tweets)</code></pre></div>
-<p>A total of 529 tweets were collected.</p>
+<span class="kw">head</span>(tweets)
+<span class="kw">nrow</span>(tweets)</code></pre></div>
+<p>A total of 746 tweets were collected.</p>
 <div id="descriptive-analysis" class="section level3">
 <h3 class="hasAnchor"><html><body><a href="#descriptive-analysis" class="anchor"> </a></body></html>Descriptive Analysis</h3>
-<p>Who&rsquo;s tweeting - top 25 users:</p>
+<p>Who&rsquo;s tweeting? The tweets originate from a total of 207 users. The top 25 users (by their number of tweets) are:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(ggplot2)
-<span class="kw">library</span>(tidyr)
+<span class="kw">library</span>(dplyr)
 
 top_tweeters &lt;-<span class="st"> </span>tweets %&gt;%<span class="st"> </span><span class="kw">group_by</span>(screen_name) %&gt;%
 <span class="st">  </span><span class="kw">summarise</span>(<span class="dt">nTweets=</span><span class="kw">n</span>()) %&gt;%
@@ -78,32 +79,43 @@ top_tweeters &lt;-<span class="st"> </span>tweets %&gt;%<span class="st"> </span
 <span class="st">  </span><span class="kw">top_n</span>(<span class="dt">n=</span><span class="dv">25</span>)
 
 <span class="kw">ggplot</span>( top_tweeters, <span class="kw">aes</span>(<span class="dt">x=</span>screen_name,<span class="dt">weight=</span>nTweets)) +<span class="st"> </span><span class="kw">geom_bar</span>() +<span class="st"> </span><span class="kw">coord_flip</span>() +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">"Number of tweets"</span>)</code></pre></div>
-<p><img src="twitter_files/figure-html/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="twitter_files/figure-html/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;"></p>
+<p>Distribution of the different hashtags used in the tweets:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">df &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">hashtag=</span><span class="kw">unlist</span>((tweets)$hashtags)) %&gt;%
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">hashtag =</span> stringr::<span class="kw">str_trim</span>(hashtag), <span class="dt">hashtag =</span> <span class="kw">tolower</span>(hashtag)) %&gt;%
+<span class="st">  </span><span class="kw">filter</span>(!hashtag %in%<span class="st"> </span><span class="kw">c</span>(<span class="st">"escaide2016"</span>)) %&gt;%
+<span class="st">  </span><span class="kw">group_by</span>(hashtag) %&gt;%
+<span class="st">  </span><span class="kw">summarise</span>(<span class="dt">n=</span><span class="kw">n</span>()) %&gt;%<span class="st"> </span><span class="kw">filter</span>(!<span class="kw">is.na</span>(hashtag)) %&gt;%<span class="st"> </span><span class="kw">arrange</span>(-n) %&gt;%<span class="st"> </span><span class="kw">top_n</span>(<span class="dt">n=</span><span class="dv">40</span>)
+
+<span class="kw">ggplot</span>(df, <span class="kw">aes</span>(<span class="dt">x=</span>hashtag,<span class="dt">y=</span>n)) +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">stat=</span><span class="st">"identity"</span>) +
+<span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x=</span><span class="kw">element_text</span>(<span class="dt">angle=</span><span class="dv">90</span>, <span class="dt">hjust=</span><span class="dv">1</span>))</code></pre></div>
+<p><img src="twitter_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Distribution of the system used for the tweeting:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>( tweets, <span class="kw">aes</span>(source)) +<span class="st"> </span><span class="kw">geom_bar</span>() +<span class="st"> </span><span class="kw">coord_flip</span>()</code></pre></div>
-<p><img src="twitter_files/figure-html/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;"></p>
+<p><img src="twitter_files/figure-html/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>Time series of the tweets (without interruptions):</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">require</span>(lubridate)
+<span class="kw">require</span>(dplyr)
 
+## Make POSIX function for dplyr re-use
+make_posix &lt;-<span class="st"> </span>. %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">time=</span>lubridate::<span class="kw">ymd_hms</span>(<span class="kw">paste0</span>(year,<span class="st">"-"</span>,month,<span class="st">"-"</span>,day,<span class="st">" "</span>,hour,<span class="st">":00:00"</span>),<span class="dt">tz=</span><span class="st">"CET"</span>))
+
+## All possible time points
 ts &lt;-<span class="st"> </span>tweets %&gt;%
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">hour =</span> <span class="kw">sprintf</span>(<span class="st">"%.02d"</span>,<span class="kw">hour</span>(created_at)), <span class="dt">day=</span><span class="kw">day</span>(created_at),<span class="dt">month=</span><span class="kw">month</span>(created_at),<span class="dt">year=</span><span class="kw">year</span>(created_at)) %&gt;%
-<span class="st">  </span><span class="kw">unite</span>(<span class="st">"time"</span>,<span class="kw">c</span>(year,month,day,hour)) %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">time2=</span><span class="kw">factor</span>(time)) %&gt;%
-<span class="st">  </span><span class="kw">count</span>(time2) %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">time3 =</span> <span class="dv">1</span>:<span class="kw">n</span>())
-<span class="kw">ggplot</span>(ts, <span class="kw">aes</span>(<span class="dt">x=</span>time2, <span class="dt">weight=</span>n)) +<span class="st"> </span><span class="kw">geom_bar</span>() +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x=</span><span class="kw">element_text</span>(<span class="dt">angle=</span><span class="dv">90</span>, <span class="dt">hjust=</span><span class="dv">1</span>)) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">"No. of tweets"</span>) +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">"Time"</span>)</code></pre></div>
-<p><img src="twitter_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;"></p>
-<p>Aggregate data into hourly intervals for each conference day:</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(lubridate)
-<span class="kw">library</span>(scales)
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">hour =</span> <span class="kw">sprintf</span>(<span class="st">"%.02d"</span>,lubridate::<span class="kw">hour</span>(created_at)), <span class="dt">day=</span>lubridate::<span class="kw">day</span>(created_at),<span class="dt">month=</span>lubridate::<span class="kw">month</span>(created_at),<span class="dt">year=</span>lubridate::<span class="kw">year</span>(created_at)) %&gt;%
+<span class="st">  </span>make_posix %&gt;%
+<span class="st">  </span><span class="kw">group_by</span>(time) %&gt;%<span class="st"> </span><span class="kw">summarise</span>(<span class="dt">n=</span><span class="kw">n</span>())
 
-tweets &lt;-<span class="st"> </span>tweets %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">day =</span> <span class="kw">factor</span>(<span class="kw">day</span>(<span class="kw">with_tz</span>(created_at, <span class="st">"EST"</span>))))
-tweets %&gt;%
-<span class="st">  </span><span class="kw">count</span>(day, <span class="dt">hour =</span> <span class="kw">hour</span>(<span class="kw">with_tz</span>(created_at, <span class="st">"CET"</span>))) %&gt;%
-<span class="st">    </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(hour, n, <span class="dt">color =</span> day)) +
-<span class="st">  </span><span class="kw">geom_line</span>() +
-<span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">"Hour of day (CET)"</span>,
-       <span class="dt">y =</span> <span class="st">"No. of tweets"</span>,
-       <span class="dt">color =</span> <span class="st">""</span>)</code></pre></div>
-<p><img src="twitter_files/figure-html/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;"></p>
+allTimes &lt;-<span class="st"> </span><span class="kw">expand.grid</span>(<span class="dt">year=</span><span class="dv">2016</span>, <span class="dt">month=</span><span class="dv">11</span>, <span class="dt">day=</span><span class="dv">25</span>:<span class="dv">30</span>, <span class="dt">hour=</span><span class="kw">sprintf</span>(<span class="st">"%.02d"</span>,<span class="dv">0</span>:<span class="dv">23</span>)) %&gt;%
+<span class="st">  </span>make_posix %&gt;%
+<span class="st">  </span><span class="kw">arrange</span>(time) %&gt;%<span class="st"> </span><span class="kw">mutate</span>(<span class="dt">n=</span><span class="dv">0</span>)
+
+ts2 &lt;-<span class="st"> </span>allTimes %&gt;%<span class="st"> </span><span class="kw">left_join</span>(ts, <span class="dt">by=</span><span class="st">"time"</span>) %&gt;%<span class="st"> </span><span class="kw">group_by</span>(time) %&gt;%
+<span class="st">  </span><span class="kw">summarise</span>(<span class="dt">n=</span><span class="kw">sum</span>(n.x+n.y,<span class="dt">na.rm=</span><span class="ot">TRUE</span>)) %&gt;%
+<span class="st">  </span><span class="kw">filter</span>(time &gt;<span class="st"> "2016-11-28 08:00:00 CET"</span> &amp;<span class="st"> </span>(time &lt;<span class="st"> "2016-11-30 12:00:00 CET"</span>))
+
+<span class="kw">ggplot</span>(ts2, <span class="kw">aes</span>(<span class="dt">x=</span>time, <span class="dt">y=</span>n)) +<span class="st"> </span><span class="kw">geom_bar</span>(<span class="dt">stat=</span><span class="st">"identity"</span>,<span class="dt">alpha=</span>.<span class="dv">8</span>) +<span class="st"> </span><span class="kw">theme</span>(<span class="dt">axis.text.x=</span><span class="kw">element_text</span>(<span class="dt">angle=</span><span class="dv">90</span>, <span class="dt">hjust=</span><span class="dv">1</span>)) +<span class="st"> </span><span class="kw">ylab</span>(<span class="st">"No. of tweets"</span>) +<span class="st"> </span><span class="kw">xlab</span>(<span class="st">"Time"</span>) +<span class="st"> </span><span class="kw">ggtitle</span>(the_query) +<span class="st"> </span><span class="kw">scale_x_datetime</span>(<span class="dt">date_minor_breaks=</span><span class="st">"1 hour"</span>,<span class="dt">date_breaks=</span><span class="st">"1 hour"</span>,<span class="dt">date_labels=</span><span class="st">"Nov %d-%H:00"</span>)</code></pre></div>
+<p><img src="twitter_files/figure-html/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;"></p>
 </div>
 </div>
 </div>
