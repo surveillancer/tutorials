@@ -151,19 +151,25 @@ See [this tutorial](sts-conversions.html).
 ### Time series of cases aggregated over all countries
 
 ```{r stsplot_time1}
-plot(ecdc_sts, type = observed ~ time)  # incomplete because of missing counts
+plot(ecdc_sts, type = observed ~ time)  # see help("stsplot_time") for options
 ```
+
+The above overall time series plot is incomplete because of missing counts in
+some countries for some of the months in the beginning and end of the time
+period.
+
 
 ### Selecting a single time series
 
 ```{r stsplot_time_finland}
-plot(ecdc_sts[,"FI"], type = observed ~ time)
+plot(ecdc_sts[,"FI"])  # or: plot(ecdc_sts, units = "FI")
 ```
 
-### Multivariate time series
+### Multivariate time series (of selected countries)
 
-```{r stsplot_time, fig.width=10, fig.height=7, out.width="100%"}
-plot(ecdc_sts, type = observed ~ time | unit)  # see help("stsplot_time") for options
+```{r stsplot_time, fig.width=8, fig.height=6, out.width="100%"}
+topcounts6 <- names(head(sort(colSums(observed(ecdc_sts)), decreasing=TRUE), 6))
+plot(ecdc_sts, type = observed ~ time | unit, units = topcounts6)
 ```
 
 Currently, small manual efforts are required to plot the incidence
@@ -171,12 +177,12 @@ Currently, small manual efforts are required to plot the incidence
 ```{r stsplot_time_incidence, fig.width=10, fig.height=7, out.width="100%"}
 local({
     observed(ecdc_sts) <- observed(ecdc_sts) / population(ecdc_sts) * 1000000
-    plot(ecdc_sts, type = observed ~ time | unit, ylab = "Incidence (per 1'000'000)")
+    plot(ecdc_sts, type = observed ~ time | unit, units = topcounts6, ylab = "Incidence (per 1'000'000)")
 })
 ```
 
 
-### Map aggregated over time
+### Map of country-specific disease *counts* accumulated over time
 
 ```{r stsplot_space}
 plot(ecdc_sts, type = observed ~ unit)  # see help("stsplot_space") for options
@@ -192,16 +198,15 @@ plot(ecdc_sts, type = observed ~ unit, col.regions = COLS)
 ```
 
 
-### Incidence map aggregated over time
+### Map of country-specific disease *incidence*
 
 ```{r stsplot_space_incidence}
-plot(ecdc_sts, type = observed ~ unit,
-     population = (colMeans(population(ecdc_sts))/1000000) * (nrow(ecdc_sts)/12))
-     # -> mean yearly incidence per 1'000'000 inhabitants
+plot(ecdc_sts, type = observed ~ unit, population = 1000000/9,
+     sub = "mean yearly incidence per 1'000'000 inhabitants")
 ```
 
 
-### Animation from 2011 to 2015
+### Animation of monthly disease *counts* from 2011 to 2015
 
 ```{r animation, fig.show="animate", out.width="75%", fig.width=6, fig.height=8, cache=TRUE}
 animate(ecdc_sts, tps = 49:96, sleep = 0, verbose = FALSE,
@@ -214,10 +219,10 @@ used to store such an animation in other formats, e.g., Flash, GIF, HTML pages,
 PDF and videos. The `help("animate.sts")` contains an example.
 
 
-### Animation with incidence
+### Animation of monthly disease *incidence* from 2011 to 2015
 
 ```{r animation_incidence, fig.show="animate", out.width="75%", fig.width=6, fig.height=8, cache=TRUE}
 animate(ecdc_sts, tps = 49:96, sleep = 0, verbose = FALSE,
         timeplot = list(as.Date = TRUE),
-        population = colMeans(population(ecdc_sts))/1000000)
+        population = 1000000)  # -> incidence per 1'000'000 inhabitants
 ```
