@@ -160,27 +160,29 @@ popMatrix &lt;-<span class="st"> </span><span class="kw">t</span>(population[idx
 <h2 class="hasAnchor"><html><body><a href="#visualizations" class="anchor"> </a></body></html>Visualizations</h2>
 <div id="time-series-of-cases-aggregated-over-all-countries" class="section level3">
 <h3 class="hasAnchor"><html><body><a href="#time-series-of-cases-aggregated-over-all-countries" class="anchor"> </a></body></html>Time series of cases aggregated over all countries</h3>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(ecdc_sts, <span class="dt">type =</span> observed ~<span class="st"> </span>time)  <span class="co"># incomplete because of missing counts</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(ecdc_sts, <span class="dt">type =</span> observed ~<span class="st"> </span>time)  <span class="co"># see help("stsplot_time") for options</span></code></pre></div>
 <p><img src="ECDC2sts_files/figure-html/stsplot_time1-1.png" width="672" style="display: block; margin: auto;"></p>
+<p>The above overall time series plot is incomplete because of missing counts in some countries for some of the months in the beginning and end of the time period.</p>
 </div>
 <div id="selecting-a-single-time-series" class="section level3">
 <h3 class="hasAnchor"><html><body><a href="#selecting-a-single-time-series" class="anchor"> </a></body></html>Selecting a single time series</h3>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(ecdc_sts[,<span class="st">"FI"</span>], <span class="dt">type =</span> observed ~<span class="st"> </span>time)</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(ecdc_sts[,<span class="st">"FI"</span>])  <span class="co"># or: plot(ecdc_sts, units = "FI")</span></code></pre></div>
 <p><img src="ECDC2sts_files/figure-html/stsplot_time_finland-1.png" width="672" style="display: block; margin: auto;"></p>
 </div>
-<div id="multivariate-time-series" class="section level3">
-<h3 class="hasAnchor"><html><body><a href="#multivariate-time-series" class="anchor"> </a></body></html>Multivariate time series</h3>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(ecdc_sts, <span class="dt">type =</span> observed ~<span class="st"> </span>time |<span class="st"> </span>unit)  <span class="co"># see help("stsplot_time") for options</span></code></pre></div>
+<div id="multivariate-time-series-of-selected-countries" class="section level3">
+<h3 class="hasAnchor"><html><body><a href="#multivariate-time-series-of-selected-countries" class="anchor"> </a></body></html>Multivariate time series (of selected countries)</h3>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">topcounts6 &lt;-<span class="st"> </span><span class="kw">names</span>(<span class="kw">head</span>(<span class="kw">sort</span>(<span class="kw">colSums</span>(<span class="kw">observed</span>(ecdc_sts)), <span class="dt">decreasing=</span><span class="ot">TRUE</span>), <span class="dv">6</span>))
+<span class="kw">plot</span>(ecdc_sts, <span class="dt">units =</span> topcounts6)</code></pre></div>
 <p><img src="ECDC2sts_files/figure-html/stsplot_time-1.png" width="100%" style="display: block; margin: auto;"></p>
-<p>Currently, small manual efforts are required to plot the incidence (a <code>population</code> argument as for the spatial plots below is in development):</p>
+<p>Currently, manual efforts are required to plot the incidence (a <code>population</code> argument as for the spatial plots below is in development):</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">local</span>({
     <span class="kw">observed</span>(ecdc_sts) &lt;-<span class="st"> </span><span class="kw">observed</span>(ecdc_sts) /<span class="st"> </span><span class="kw">population</span>(ecdc_sts) *<span class="st"> </span><span class="dv">1000000</span>
-    <span class="kw">plot</span>(ecdc_sts, <span class="dt">type =</span> observed ~<span class="st"> </span>time |<span class="st"> </span>unit, <span class="dt">ylab =</span> <span class="st">"Incidence (per 1'000'000)"</span>)
+    <span class="kw">plot</span>(ecdc_sts, <span class="dt">units =</span> topcounts6, <span class="dt">ylab =</span> <span class="st">"Incidence (per 1'000'000)"</span>)
 })</code></pre></div>
 <p><img src="ECDC2sts_files/figure-html/stsplot_time_incidence-1.png" width="100%" style="display: block; margin: auto;"></p>
 </div>
-<div id="map-aggregated-over-time" class="section level3">
-<h3 class="hasAnchor"><html><body><a href="#map-aggregated-over-time" class="anchor"> </a></body></html>Map aggregated over time</h3>
+<div id="map-of-country-specific-disease-counts-accumulated-over-time" class="section level3">
+<h3 class="hasAnchor"><html><body><a href="#map-of-country-specific-disease-counts-accumulated-over-time" class="anchor"> </a></body></html>Map of country-specific disease <em>counts</em> accumulated over time</h3>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(ecdc_sts, <span class="dt">type =</span> observed ~<span class="st"> </span>unit)  <span class="co"># see help("stsplot_space") for options</span></code></pre></div>
 <p><img src="ECDC2sts_files/figure-html/stsplot_space-1.png" width="672" style="display: block; margin: auto;"></p>
 <p>To change the color key to a color-blind friendly version:</p>
@@ -190,28 +192,28 @@ popMatrix &lt;-<span class="st"> </span><span class="kw">t</span>(population[idx
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(ecdc_sts, <span class="dt">type =</span> observed ~<span class="st"> </span>unit, <span class="dt">col.regions =</span> COLS)</code></pre></div>
 <p><img src="ECDC2sts_files/figure-html/stsplot_space_colors-1.png" width="672" style="display: block; margin: auto;"></p>
 </div>
-<div id="incidence-map-aggregated-over-time" class="section level3">
-<h3 class="hasAnchor"><html><body><a href="#incidence-map-aggregated-over-time" class="anchor"> </a></body></html>Incidence map aggregated over time</h3>
+<div id="map-of-country-specific-disease-incidence" class="section level3">
+<h3 class="hasAnchor"><html><body><a href="#map-of-country-specific-disease-incidence" class="anchor"> </a></body></html>Map of country-specific disease <em>incidence</em></h3>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(ecdc_sts, <span class="dt">type =</span> observed ~<span class="st"> </span>unit,
-     <span class="dt">population =</span> (<span class="kw">colMeans</span>(<span class="kw">population</span>(ecdc_sts))/<span class="dv">1000000</span>) *<span class="st"> </span>(<span class="kw">nrow</span>(ecdc_sts)/<span class="dv">12</span>))</code></pre></div>
+     <span class="dt">population =</span> <span class="dv">1000000</span>/<span class="dv">9</span>,  <span class="co"># [this shorthand requires surveillance &gt; 1.12.2]</span>
+     <span class="dt">sub =</span> <span class="st">"mean yearly incidence per 1'000'000 inhabitants"</span>)</code></pre></div>
 <p><img src="ECDC2sts_files/figure-html/stsplot_space_incidence-1.png" width="672" style="display: block; margin: auto;"></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">     <span class="co"># -&gt; mean yearly incidence per 1'000'000 inhabitants</span></code></pre></div>
 </div>
-<div id="animation-from-2011-to-2015" class="section level3">
-<h3 class="hasAnchor"><html><body><a href="#animation-from-2011-to-2015" class="anchor"> </a></body></html>Animation from 2011 to 2015</h3>
+<div id="animation-of-monthly-disease-counts-from-2011-to-2015" class="section level3">
+<h3 class="hasAnchor"><html><body><a href="#animation-of-monthly-disease-counts-from-2011-to-2015" class="anchor"> </a></body></html>Animation of monthly disease <em>counts</em> from 2011 to 2015</h3>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">animate</span>(ecdc_sts, <span class="dt">tps =</span> <span class="dv">49</span>:<span class="dv">96</span>, <span class="dt">sleep =</span> <span class="dv">0</span>, <span class="dt">verbose =</span> <span class="ot">FALSE</span>,
-        <span class="dt">timeplot =</span> <span class="kw">list</span>(<span class="dt">as.Date =</span> <span class="ot">TRUE</span>))</code></pre></div>
+        <span class="dt">timeplot =</span> <span class="kw">list</span>(<span class="dt">as.Date =</span> <span class="ot">TRUE</span>))  <span class="co"># [requires surveillance &gt; 1.12.2]</span></code></pre></div>
 <video width="75%" controls loop><source src="ECDC2sts_files/figure-html/animation-.webm"></source><p>
 video of chunk animation
 </p>
-</video><div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## see help("animate.sts") for options ['as.Date' requires surveillance &gt; 1.12.2]</code></pre></div>
+</video><div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">## see help("animate.sts") for options</code></pre></div>
 <p>The <a href="https://CRAN.R-project.org/package=animation"><strong>animation</strong></a> package can be used to store such an animation in other formats, e.g., Flash, GIF, HTML pages, PDF and videos. The <code>help("animate.sts")</code> contains an example.</p>
 </div>
-<div id="animation-with-incidence" class="section level3">
-<h3 class="hasAnchor"><html><body><a href="#animation-with-incidence" class="anchor"> </a></body></html>Animation with incidence</h3>
+<div id="animation-of-monthly-disease-incidence-from-2011-to-2015" class="section level3">
+<h3 class="hasAnchor"><html><body><a href="#animation-of-monthly-disease-incidence-from-2011-to-2015" class="anchor"> </a></body></html>Animation of monthly disease <em>incidence</em> from 2011 to 2015</h3>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">animate</span>(ecdc_sts, <span class="dt">tps =</span> <span class="dv">49</span>:<span class="dv">96</span>, <span class="dt">sleep =</span> <span class="dv">0</span>, <span class="dt">verbose =</span> <span class="ot">FALSE</span>,
-        <span class="dt">timeplot =</span> <span class="kw">list</span>(<span class="dt">as.Date =</span> <span class="ot">TRUE</span>),
-        <span class="dt">population =</span> <span class="kw">colMeans</span>(<span class="kw">population</span>(ecdc_sts))/<span class="dv">1000000</span>)</code></pre></div>
+        <span class="dt">timeplot =</span> <span class="kw">list</span>(<span class="dt">as.Date =</span> <span class="ot">TRUE</span>),  <span class="co"># the bottom time-series still shows counts</span>
+        <span class="dt">population =</span> <span class="dv">1000000</span>)  <span class="co"># per 1'000'000 [this shorthand requires surveillance &gt; 1.12.2]</span></code></pre></div>
 <video width="75%" controls loop><source src="ECDC2sts_files/figure-html/animation_incidence-.webm"></source><p>
 video of chunk animation_incidence
 </p>
