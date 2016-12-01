@@ -169,15 +169,15 @@ plot(ecdc_sts[,"FI"])  # or: plot(ecdc_sts, units = "FI")
 
 ```{r stsplot_time, fig.width=8, fig.height=6, out.width="100%"}
 topcounts6 <- names(head(sort(colSums(observed(ecdc_sts)), decreasing=TRUE), 6))
-plot(ecdc_sts, type = observed ~ time | unit, units = topcounts6)
+plot(ecdc_sts, units = topcounts6)
 ```
 
-Currently, small manual efforts are required to plot the incidence
+Currently, manual efforts are required to plot the incidence
 (a `population` argument as for the spatial plots below is in development):
 ```{r stsplot_time_incidence, fig.width=10, fig.height=7, out.width="100%"}
 local({
     observed(ecdc_sts) <- observed(ecdc_sts) / population(ecdc_sts) * 1000000
-    plot(ecdc_sts, type = observed ~ time | unit, units = topcounts6, ylab = "Incidence (per 1'000'000)")
+    plot(ecdc_sts, units = topcounts6, ylab = "Incidence (per 1'000'000)")
 })
 ```
 
@@ -201,7 +201,8 @@ plot(ecdc_sts, type = observed ~ unit, col.regions = COLS)
 ### Map of country-specific disease *incidence*
 
 ```{r stsplot_space_incidence}
-plot(ecdc_sts, type = observed ~ unit, population = 1000000/9,
+plot(ecdc_sts, type = observed ~ unit,
+     population = 1000000/9,  # [this shorthand requires surveillance > 1.12.2]
      sub = "mean yearly incidence per 1'000'000 inhabitants")
 ```
 
@@ -210,8 +211,8 @@ plot(ecdc_sts, type = observed ~ unit, population = 1000000/9,
 
 ```{r animation, fig.show="animate", out.width="75%", fig.width=6, fig.height=8, cache=TRUE}
 animate(ecdc_sts, tps = 49:96, sleep = 0, verbose = FALSE,
-        timeplot = list(as.Date = TRUE))
-## see help("animate.sts") for options ['as.Date' requires surveillance > 1.12.2]
+        timeplot = list(as.Date = TRUE))  # [requires surveillance > 1.12.2]
+## see help("animate.sts") for options
 ```
 
 The [**animation**](https://CRAN.R-project.org/package=animation) package can be
@@ -223,6 +224,6 @@ PDF and videos. The `help("animate.sts")` contains an example.
 
 ```{r animation_incidence, fig.show="animate", out.width="75%", fig.width=6, fig.height=8, cache=TRUE}
 animate(ecdc_sts, tps = 49:96, sleep = 0, verbose = FALSE,
-        timeplot = list(as.Date = TRUE),
-        population = 1000000)  # -> incidence per 1'000'000 inhabitants
+        timeplot = list(as.Date = TRUE),  # the bottom time-series still shows counts
+        population = 1000000)  # per 1'000'000 [this shorthand requires surveillance > 1.12.2]
 ```
