@@ -187,7 +187,8 @@ monitored_tweets_df &lt;-<span class="st"> </span><span class="kw">mutate</span>
 <span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x=</span><span class="kw">element_text</span>(<span class="dt">angle=</span><span class="dv">90</span>, <span class="dt">hjust=</span><span class="dv">1</span>)) +
 <span class="st">  </span><span class="kw">ylab</span>(<span class="st">"No. of tweets"</span>) +
 <span class="st">  </span><span class="kw">xlab</span>(<span class="st">"Time"</span>) +<span class="st"> </span><span class="kw">ggtitle</span>(the_query) +
-<span class="st">  </span><span class="kw">scale_x_datetime</span>(<span class="dt">date_minor_breaks=</span><span class="st">"1 hour"</span>,<span class="dt">date_breaks=</span><span class="st">"1 hour"</span>,<span class="dt">date_labels=</span><span class="st">"Nov %d-%H:00"</span>) +
+<span class="st">  </span>##  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00") +
+<span class="st">  </span><span class="kw">scale_x_datetime</span>(<span class="dt">date_minor_breaks=</span><span class="st">"1 hour"</span>,<span class="dt">date_breaks=</span><span class="st">"1 hour"</span>,<span class="dt">labels=</span>scales::<span class="kw">date_format</span>(<span class="st">"Nov %d-%H:00"</span>, <span class="dt">tz =</span> <span class="st">"CET"</span>),<span class="dt">expand=</span><span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">0</span>)) +
 <span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">60</span>, <span class="dt">size =</span> <span class="dv">6</span>))</code></pre></div>
 <p><img src="twitter_files/figure-html/ears-1.png" width="672" style="display: block; margin: auto;"></p>
 <div id="instant-citizen-science-experiment" class="section level3">
