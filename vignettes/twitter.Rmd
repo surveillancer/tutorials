@@ -199,18 +199,20 @@ monitored_tweets <- earsC(tweet_sts, control = list(baseline = baseline))
 monitored_tweets_df <- as.data.frame(monitored_tweets)
 
 monitored_tweets_df <- mutate(monitored_tweets_df,
-                          time = ts2$time[(baseline + 1):
-                                           nrow(ts2) - 1])
-ggplot(monitored_tweets_df) +
-  geom_bar(aes(time, observed, fill = alarm), stat = "identity") +
+                          time = ts2$time[(baseline + 1):(nrow(ts2))])
+ggplot(ts3) +
+  geom_bar(aes(time, n, fill = group), stat = "identity") +
   viridis::scale_fill_viridis(discrete = TRUE, name = "Alarm:") +
-  geom_step(aes(time, upperbound)) +
+  geom_step(data = monitored_tweets_df, aes(time, upperbound)) +
   theme(legend.position = "bottom") +
   theme(axis.text.x=element_text(angle=90, hjust=1)) +
   ylab("No. of tweets") +
   xlab("Time") + ggtitle(the_query) +
   scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00") +
-  theme(axis.text.x = element_text(angle = 60, size = 6))
+  theme(axis.text.x = element_text(angle = 60, size = 6)) + 
+  geom_point(data = filter(monitored_tweets_df, alarm), aes(x = time), y = 0, color = "red") +
+  viridis::scale_fill_viridis(discrete = TRUE, name="Tweet Type", label = c("Standard tweet", 
+                                                                            "Our outbreak tweet/retweet"))
 
 ```
 
