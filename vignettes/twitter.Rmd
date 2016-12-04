@@ -132,7 +132,7 @@ ts2 <- allTimes %>% left_join(ts, by="time") %>% group_by(time) %>%
 na2zero <- function(x) {x[is.na(x)] <- 0 ; return(x)}
 
 ts2 <- ts2 %>% mutate(n_retweets = na2zero(n_retweets),
-                      n_noretweets = na2zero(n_noretweets)) %>% 
+                      n_noretweets = na2zero(n_noretweets)) %>%
   rename(retweet = n_retweets, no_retweet = n_noretweets)
 ts3 <- tidyr::gather(ts2, group, n, retweet:no_retweet)
 ts3 <- ts3 %>% mutate(group = factor(group))
@@ -146,9 +146,9 @@ p <- ggplot(ts3) +
   theme(axis.text.x=element_text(angle=90, hjust=1)) +
   ylab("No. of tweets") +
   xlab("Time") + ggtitle(the_query) +
-  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00") +
+  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00", expand=c(0.5/24,0.5/24)) +
   theme(axis.text.x = element_text(angle = 60, size = 6), legend.position = "bottom") +
-  viridis::scale_fill_viridis(discrete = TRUE, name="Tweet Type", label = c("Standard tweet", 
+  viridis::scale_fill_viridis(discrete = TRUE, name="Tweet Type", label = c("Standard tweet",
                                                                             "Outbreak tweet/retweet"))
 p
 ```
@@ -208,10 +208,10 @@ ggplot(ts3) +
   theme(axis.text.x=element_text(angle=90, hjust=1)) +
   ylab("No. of tweets") +
   xlab("Time") + ggtitle(the_query) +
-  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00") +
-  theme(axis.text.x = element_text(angle = 60, size = 6)) + 
+  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00", expand=c(0.5/24,0.5/24)) +
+  theme(axis.text.x = element_text(angle = 60, size = 6)) +
   geom_point(data = filter(monitored_tweets_df, alarm), aes(x = time), y = 0, color = "red") +
-  viridis::scale_fill_viridis(discrete = TRUE, name="Tweet Type", label = c("Standard tweet", 
+  viridis::scale_fill_viridis(discrete = TRUE, name="Tweet Type", label = c("Standard tweet",
                                                                             "Our outbreak tweet/retweet"))
 
 ```
