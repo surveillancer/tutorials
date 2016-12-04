@@ -57,21 +57,27 @@ the_query <- "#ESCAIDE2016 OR #ESCAIDE OR @ESCAIDE"
 tweets <- search_tweets(the_query, n = 15000, type="recent", token = twitter_token)
 ```
 ````{r,echo=FALSE,eval=FALSE}
-saveRDS(object=tweets,file="vignettes/data/tweets.rds")
+saveRDS(object=tweets,file="data/tweets.rds")
+tweet_query_date <- Sys.time()
+dump(list="tweet_query_date",file="data/tweet-query-date.R")
 ```
 ```{r,echo=FALSE}
 tweets <- readRDS(file="data/tweets.rds")
+source(file="data/tweet-query-date.R")
 ```
+
+A total of `r nrow(tweets)` tweets were collected on `r
+as.character(tweet_query_date)`. Below we show the first few entries:
+
 ```{r, R.options=list(width=300)}
 DT::datatable(head(tweets))
 ```
 
-A total of `r nrow(tweets)` tweets were collected.
 
 ### Descriptive Analysis
 
 Who's tweeting? The tweets originate from a total of
-`r n_distinct(tweets$screen_name)` users. The top 25 users (by their
+`r n_distinct(tweets$screen_name)` users. The top 30 users (by their
 number of tweets) are:
 
 ```{r,message=FALSE}
@@ -79,7 +85,7 @@ number of tweets) are:
 top_tweeters <- tweets %>% group_by(screen_name) %>%
   summarise(nTweets=n()) %>%
   arrange(desc(nTweets)) %>%
-  top_n(n=25)
+  top_n(n=30)
 
 ggplot( top_tweeters, aes(x=screen_name,weight=nTweets)) + geom_bar() + coord_flip() + xlab("Number of tweets")
 ```
@@ -127,7 +133,7 @@ allTimes <- expand.grid(year=2016, month=11, day=25:30, hour=sprintf("%.02d",0:2
   arrange(time) %>% mutate(n=0)
 
 ts2 <- allTimes %>% left_join(ts, by="time") %>% group_by(time) %>%
-  filter(time > "2016-11-28 08:00:00 CET" & (time < "2016-11-30 17:30:00 CET")) %>% select(-n.x,-is_retweet_of_us,-n.y)
+  filter(time > "2016-11-28 08:00:00 CET" & (time <= "2016-11-30 19:00:00 CET")) %>% select(-n.x,-is_retweet_of_us,-n.y)
 
 na2zero <- function(x) {x[is.na(x)] <- 0 ; return(x)}
 
@@ -146,7 +152,9 @@ p <- ggplot(ts3) +
   theme(axis.text.x=element_text(angle=90, hjust=1)) +
   ylab("No. of tweets") +
   xlab("Time") + ggtitle(the_query) +
-  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00", expand=c(0.5/24,0.5/24)) +
+  ##  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00") +
+  ## http://stackoverflow.com/questions/36227130/r-as-posixct-timezone-and-scale-x-datetime-issues-in-my-dataset
+  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",labels=scales::date_format("Nov %d-%H:00", tz = "CET"),expand=c(0,0)) +
   theme(axis.text.x = element_text(angle = 60, size = 6), legend.position = "bottom") +
   viridis::scale_fill_viridis(discrete = TRUE, name="Tweet Type", label = c("Standard tweet",
                                                                             "Outbreak tweet/retweet"))
@@ -179,7 +187,7 @@ conference_program_slots <- tibble::tribble(
 ```
 
 ```{r}
-p + geom_rect(data = filter(conference_program_slots, to < "2016-11-30 17:30:00 CET"),
+p + geom_rect(data = filter(conference_program_slots, to <= "2016-11-30 19:00:00 CET"),
             aes(xmin = from, xmax = to, ymin = 0, ymax = max(ts3$n), color = slot_type), alpha = 0.4) +
   theme(legend.position = "bottom") +
   viridis::scale_color_viridis(discrete = TRUE, name = "Session Type:")
@@ -208,7 +216,8 @@ ggplot(ts3) +
   theme(axis.text.x=element_text(angle=90, hjust=1)) +
   ylab("No. of tweets") +
   xlab("Time") + ggtitle(the_query) +
-  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00", expand=c(0.5/24,0.5/24)) +
+    ##  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",date_labels="Nov %d-%H:00") +
+  scale_x_datetime(date_minor_breaks="1 hour",date_breaks="1 hour",labels=scales::date_format("Nov %d-%H:00", tz = "CET"),expand=c(0,0)) +
   theme(axis.text.x = element_text(angle = 60, size = 6)) +
   geom_point(data = filter(monitored_tweets_df, alarm), aes(x = time), y = 0, color = "red") +
   viridis::scale_fill_viridis(discrete = TRUE, name="Tweet Type", label = c("Standard tweet",
