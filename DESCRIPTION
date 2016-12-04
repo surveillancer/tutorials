@@ -1,17 +1,18 @@
 Package: surveillancetutorials
 Type: Package
-Title: Tutorials for surveillance
+Title: Tutorials for the surveillance package
 Version: 0.1.0.9000
 Authors@R: c(person("Michael", "Höhle", role = "aut"),
 	     person("Sebastian", "Meyer", role = "aut"),
              person("Maëlle", "Salmon", role = "aut"),
 	     person("Dirk", "Schumacher", role = "aut"))
-Description: Just a dummy file.
+Description: A package containing vignette-like tutorial documentation for the surveillance package.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Suggests:
     knitr,
-    rmarkdown
+    rmarkdown,
+    surveillance
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1
