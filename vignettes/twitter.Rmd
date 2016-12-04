@@ -66,8 +66,7 @@ tweets <- readRDS(file="data/tweets.rds")
 source(file="data/tweet-query-date.R")
 ```
 
-A total of `r nrow(tweets)` tweets were collected on `r
-as.character(tweet_query_date)`. Below we show the first few entries:
+A total of `r nrow(tweets)` tweets were collected on `r as.character(tweet_query_date)`. Below we show the first few entries:
 
 ```{r, R.options=list(width=300)}
 DT::datatable(head(tweets))
@@ -109,17 +108,24 @@ Distribution of the system used for the tweeting:
 ggplot( tweets, aes(source)) + geom_bar() + coord_flip()
 ```
 
-Time series of the tweets (without interruptions):
+Hourly time series of the tweets - we distinguish between ordinary
+tweets containing the relevant hashtags and tweets, which correspond
+to or a retweet of single particular tweet with the id
+`r as.character(803931871662972928)` (see later). This is a little
+tricky, because we also need to ensure that intervals with no tweets
+get a zero count and are not just simply omitted:
+
 ```{r}
 library(lubridate)
 
 ## Make POSIX function for dplyr re-use
 make_posix <- . %>% mutate(time=lubridate::ymd_hms(paste0(year,"-",month,"-",day," ",hour,":00:00"),tz="CET"))
 
+## What's the ID of our outbreak seeding tweet?
+the_tweet_id <- "803931871662972928"
+
 ##Are tweets a retweet of our tweet?
-#the_tweet_id <- tweets %>% filter(screen_name == "m_hoehle") %>% head(n=1) %>% .[["status_id"]] %>% as.character
-tweets <- tweets %>% mutate( is_retweet_of_us = (!is.na(retweet_status_id == 803931871662972928) & retweet_status_id == 803931871662972928))
-#tweets2 <- tweets %>% mutate_( paste0("is_retweet_of_us = (retweet_status_id == ", the_tweet_id,")"))
+tweets <- tweets %>% mutate_(is_retweet_of_us=paste0("((!is.na(retweet_status_id) & retweet_status_id == ", the_tweet_id,") | (status_id == ",the_tweet_id,"))"))
 
 ## All possible time points
 ts <- tweets %>%
